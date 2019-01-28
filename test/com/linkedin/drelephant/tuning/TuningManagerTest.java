@@ -41,6 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import com.linkedin.drelephant.tuning.engine.SparkHBTParamRecommenderTestRunner;;
 
 public class TuningManagerTest {
   private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TuningManagerTest.class);
@@ -96,6 +97,11 @@ public class TuningManagerTest {
   @Test
   public void testParamGenerterTestRunner() {
     running(testServer(TEST_SERVER_PORT, fakeApp), new ParameterGenerateManagerTestRunner());
+  }
+
+  @Test
+  public void testSparkHBTParamRecommenderTestRunner() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new SparkHBTParamRecommenderTestRunner());
   }
 
   @Test
