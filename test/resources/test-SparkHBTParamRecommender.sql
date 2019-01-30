@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 LinkedIn Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 INSERT INTO yarn_app_result(id, name, username, queue_name, start_time, finish_time, tracking_url, job_type, severity, score, workflow_depth, scheduler, job_name, job_exec_id, flow_exec_id, job_def_id, flow_def_id, job_exec_url, flow_exec_url, job_def_url, flow_def_url, resource_used, resource_wasted, total_delay)
   VALUES('application_1547833800460_664575', 'com.linkedin.hello.spark.CountPageView', 'mkumar1', 'sna_default', '1548423066104', '1548423131477', 'http://ltx1-farowp01.grid.linkedin.com:8080/proxy/application_1547833800460_664575/', 'Spark', 4, '553', 0, 'azkaban', 'countPageViewFlow_countPageView', 'https://hostname.com:8443/executor?execid=2136899&job=countPageViewFlow_countPageView&attempt=0', 'https://hostname.com:8443/executor?execid=2136899', 'https://hostname.com:8443/manager?project=spark_starter_kit&flow=countPageViewFlow&job=countPageViewFlow_countPageView', 'https://hostname.com:8443/manager?project=spark_starter_kit&flow=countPageViewFlow', 'https://hostname.com:8443/executor?execid=2136899&job=countPageViewFlow_countPageView&attempt=0', 'https://hostname.com:8443/executor?execid=2136899', 'https://hostname.com:8443/manager?project=spark_starter_kit&flow=countPageViewFlow&job=countPageViewFlow_countPageView', 'https://hostname.com:8443/manager?project=spark_starter_kit&flow=countPageViewFlow', '3095406', '2773917', '0');
 
@@ -182,16 +198,13 @@ INSERT INTO yarn_app_heuristic_result_details(yarn_app_heuristic_result_id, name
   VALUES(36119, 'spark.dynamicAllocation.enabled', 'true', NULL);
 
 INSERT INTO yarn_app_heuristic_result_details(yarn_app_heuristic_result_id, name, value, details)
-  VALUES(36119, 'spark.dynamicAllocation.maxExecutors', '900', NULL);
+  VALUES(36119, 'spark.dynamicAllocation.maxExecutors', '30', NULL);
 
 INSERT INTO yarn_app_heuristic_result_details(yarn_app_heuristic_result_id, name, value, details)
   VALUES(36119, 'spark.dynamicAllocation.minExecutors', '9', NULL);
 
 INSERT INTO yarn_app_heuristic_result_details(yarn_app_heuristic_result_id, name, value, details)
   VALUES(36119, 'spark.executor.cores', '1', NULL);
-
-INSERT INTO yarn_app_heuristic_result_details(yarn_app_heuristic_result_id, name, value, details)
-  VALUES(36119, 'spark.executor.instances', '50', NULL);
 
 INSERT INTO yarn_app_heuristic_result_details(yarn_app_heuristic_result_id, name, value, details)
   VALUES(36119, 'spark.executor.memory', '8 GB', NULL);

@@ -1041,12 +1041,6 @@ public class Application extends Controller {
       } else if (param.getKey().equals(SparkConfigurationConstants.SPARK_EXECUTOR_CORES_KEY)) {
         outputParamFormatted.put(SparkConfigurationConstants.SPARK_EXECUTOR_CORES_KEY,
             String.valueOf(param.getValue().intValue()));
-      }else if (param.getKey().equals(SparkConfigurationConstants.SPARK_DYNAMIC_ALLOCATION_MIN_EXECUTORS)) {
-        outputParamFormatted.put(SparkConfigurationConstants.SPARK_DYNAMIC_ALLOCATION_MIN_EXECUTORS,
-            String.valueOf(param.getValue().intValue()));
-      }else if (param.getKey().equals(SparkConfigurationConstants.SPARK_DYNAMIC_ALLOCATION_MAX_EXECUTORS)) {
-        outputParamFormatted.put(SparkConfigurationConstants.SPARK_DYNAMIC_ALLOCATION_MAX_EXECUTORS,
-            String.valueOf(param.getValue().intValue()));
       }else if (param.getKey().equals(SparkConfigurationConstants.SPARK_EXECUTOR_INSTANCES_KEY)) {
         outputParamFormatted.put(SparkConfigurationConstants.SPARK_EXECUTOR_INSTANCES_KEY,
             String.valueOf(param.getValue().intValue()));
@@ -1070,7 +1064,6 @@ public class Application extends Controller {
     AutoTuningAPIHelper autoTuningAPIHelper = new AutoTuningAPIHelper();
     Map<String, Double> outputParams = autoTuningAPIHelper.getCurrentRunParameters(tuningInput);
     if (outputParams != null) {
-      logger.info("Output params " + outputParams);
       JsonNode outputJSON=formatGetCurrentRunParametersOutput(outputParams, tuningInput);
       logger.info("Output JSON " + outputJSON.toString());
       return ok(formatGetCurrentRunParametersOutput(outputParams, tuningInput));
