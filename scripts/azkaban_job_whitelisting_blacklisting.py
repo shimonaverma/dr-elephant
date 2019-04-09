@@ -118,7 +118,7 @@ class Job:
 		self.new_auto_appply=auto_apply
 
 	def apply_rules(self, rules):
-		auto_apply=False
+		auto_apply=self.auto_apply
 		for rule in rules :
 			if self.job_type == rule.job_type : 
 				pattern = self.get_flow_job_expr(rule)
