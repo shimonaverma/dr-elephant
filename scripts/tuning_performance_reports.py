@@ -55,7 +55,6 @@ ON         tjeps.job_suggested_param_set_id = jsps.id
 WHERE      je.execution_state IN ('SUCCEEDED' , 'FAILED') 
 AND        je.id>%s 
 AND        tjeps.tuning_enabled=1 
-AND		   je.input_size_in_bytes>1
 ON duplicate KEY 
 UPDATE job_definition_id=je.job_definition_id, 
        job_suggested_param_set_id=jsps.id, 
