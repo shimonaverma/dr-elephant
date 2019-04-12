@@ -58,7 +58,7 @@ public class AzkabanJobStatusManager extends AbstractJobStatusManager {
       return false;
     }
     logger.info("Number of executions completed since last iteration: " + completedExecutions.size());
-    return inProgressExecutionParamSet.size()==completedExecutions.size();
+    return true;
   }
 
   private void assignAzkabanJobStatusUtil() {
