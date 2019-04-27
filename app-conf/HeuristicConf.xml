@@ -354,4 +354,14 @@
     <viewname>views.html.help.spark.helpExecutorGcHeuristic</viewname>
   </heuristic>
 
+
+  <!-- TONY HEURISTICS -->
+  <heuristic>
+    <applicationtype>tony</applicationtype>
+    <heuristicname>TonY Task Memory</heuristicname>
+    <classname>com.linkedin.drelephant.tony.heuristics.TaskMemoryHeuristic</classname>
+    <viewname>views.html.help.tony.helpTaskMemory</viewname>
+  </heuristic>
+  <!-- END TONY HEURISTICS -->
+
 </heuristics>

@@ -116,4 +116,8 @@
     </params>
   </fetcher>
   -->
+  <fetcher>
+    <applicationtype>tony</applicationtype>
+    <classname>com.linkedin.drelephant.tony.fetchers.TonyFetcher</classname>
+  </fetcher>
 </fetchers>

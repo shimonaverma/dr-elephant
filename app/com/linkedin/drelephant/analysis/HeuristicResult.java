@@ -40,7 +40,7 @@ public class HeuristicResult {
    * Heuristic Result Constructor
    *
    * @param heuristicClass The Heuristic class
-   * @param heuristicName The name of the Heursitic
+   * @param heuristicName The name of the Heuristic
    * @param severity The severity of the result
    * @param score The computed score
    */
