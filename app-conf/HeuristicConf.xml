@@ -358,7 +358,7 @@
   <!-- TONY HEURISTICS -->
   <heuristic>
     <applicationtype>tony</applicationtype>
-    <heuristicname>TonY Task Memory</heuristicname>
+    <heuristicname>Task Memory</heuristicname>
     <classname>com.linkedin.drelephant.tony.heuristics.TaskMemoryHeuristic</classname>
     <viewname>views.html.help.tony.helpTaskMemory</viewname>
   </heuristic>

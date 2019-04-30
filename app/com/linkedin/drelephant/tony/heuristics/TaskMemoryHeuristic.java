@@ -20,10 +20,10 @@ import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
-import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
+import com.linkedin.drelephant.tony.data.TonyApplicationData;
 
 
-public class TaskMemoryHeuristic implements Heuristic<MapReduceApplicationData> {
+public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
 
   private HeuristicConfigurationData _heuristicConfData;
 
@@ -32,13 +32,13 @@ public class TaskMemoryHeuristic implements Heuristic<MapReduceApplicationData> 
   }
 
   @Override
-  public HeuristicConfigurationData getHeuristicConfData() {
-    return _heuristicConfData;
+  public HeuristicResult apply(TonyApplicationData data) {
+    return new HeuristicResult(_heuristicConfData.getClassName(), _heuristicConfData.getHeuristicName(), Severity.NONE,
+        0);
   }
 
   @Override
-  public HeuristicResult apply(MapReduceApplicationData data) {
-    return new HeuristicResult(_heuristicConfData.getClassName(), _heuristicConfData.getHeuristicName(), Severity.NONE,
-        0);
+  public HeuristicConfigurationData getHeuristicConfData() {
+    return _heuristicConfData;
   }
 }
