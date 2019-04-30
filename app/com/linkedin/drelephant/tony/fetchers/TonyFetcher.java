@@ -9,15 +9,15 @@ import org.apache.hadoop.fs.Path;
 
 
 public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
-  public static final String TONY_CONF_LOCATION = "tony.conf.location";
+  public static final String TONY_CONF_LOCATION = "tony_conf_location";
 
 //  private final Path finishedDir;
 
 
   public TonyFetcher(FetcherConfigurationData fetcherConfData) {
-    String tonyConfLoc = fetcherConfData.getParamMap().get(TONY_CONF_LOCATION);
-    Configuration conf = new Configuration();
-    conf.addResource(new Path(tonyConfLoc));
+//    String tonyConfLoc = fetcherConfData.getParamMap().get(TONY_CONF_LOCATION);
+//    Configuration conf = new Configuration();
+//    conf.addResource(new Path(tonyConfLoc));
 //    finishedDir = conf.get("tony.history")
   }
 

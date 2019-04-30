@@ -21,7 +21,9 @@ public class TonyApplicationData implements HadoopApplicationData {
 
   @Override
   public Properties getConf() {
-    return null;
+    Properties props = new Properties();
+    props.put("tony.application.name", "My Awesome Application");
+    return props;
   }
 
   @Override
