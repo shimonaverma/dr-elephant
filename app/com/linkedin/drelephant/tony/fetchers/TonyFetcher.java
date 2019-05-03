@@ -79,7 +79,9 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
 
     Path confFile = new Path(jobDir, Constants.TONY_FINAL_XML);
     Configuration conf = new Configuration(false);
-    conf.addResource(_fs.open(confFile));
+    if (_fs.exists(confFile)) {
+      conf.addResource(_fs.open(confFile));
+    }
 
     return new TonyApplicationData(job.getAppId(), job.getAppType(), conf, metricsMap);
   }
