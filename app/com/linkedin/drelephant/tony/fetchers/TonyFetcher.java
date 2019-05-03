@@ -72,6 +72,12 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
   public TonyApplicationData fetchData(AnalyticJob job) throws Exception {
     long finishTime = job.getFinishTime();
     Date date = new Date(finishTime);
+
+    // TODO: We are deriving yyyy/MM/dd from the RM's application finish time, but the TonY Portal actually creates the
+    // yyyy/MM/dd directory based off the end time embedded in the jhist file name. This end time is taken before the
+    // application finishes and thus is slightly before the RM's application finish time. So it's possible that the
+    // yyyy/MM/dd derived from the RM's application finish time is a day later and we may not find the history files.
+    // In case we don't find the history files in yyyy/MM/dd, we should check the previous day as well.
     String yearMonthDay = ParserUtils.getYearMonthDayDirectory(date);
     Path jobDir = new Path(_finishedDir, yearMonthDay + Path.SEPARATOR + job.getAppId());
 
