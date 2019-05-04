@@ -12,16 +12,18 @@ import org.apache.hadoop.conf.Configuration;
 public class TonyApplicationData implements HadoopApplicationData {
   private String _appId;
   private ApplicationType _appType;
+  private Configuration _configuration;
   private Properties _props;
   private Map<String, Map<Integer, List<Metric>>> _metricsMap;
 
-  public TonyApplicationData(String appId, ApplicationType appType, Configuration conf,
+  public TonyApplicationData(String appId, ApplicationType appType, Configuration configuration,
       Map<String, Map<Integer, List<Metric>>> metricsMap) {
     _appId = appId;
     _appType = appType;
 
+    _configuration = configuration;
     _props = new Properties();
-    for (Map.Entry<String, String> entry : conf) {
+    for (Map.Entry<String, String> entry : configuration) {
       _props.setProperty(entry.getKey(), entry.getValue());
     }
 
@@ -31,6 +33,10 @@ public class TonyApplicationData implements HadoopApplicationData {
   @Override
   public String getAppId() {
     return _appId;
+  }
+
+  public Configuration getConfiguration() {
+    return _configuration;
   }
 
   @Override

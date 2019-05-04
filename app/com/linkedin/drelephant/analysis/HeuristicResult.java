@@ -73,7 +73,7 @@ public class HeuristicResult {
   /**
    * Returns the heuristic analyser class name
    *
-   * @return the heursitic class name
+   * @return the heuristic class name
    */
   public String getHeuristicClassName() {
     return _heuristicClass;
