@@ -60,8 +60,8 @@ public class TaskMemoryHeuristicTest {
   public void testSevere() {
     testHelper(
         ImmutableMap.of(Constants.WORKER_JOB_NAME, new double[]{
-            1.2e9,
-            1.1e9,
+            1.5e9,
+            1.6e9,
         }, Constants.PS_JOB_NAME, new double[]{1.84e9}),
         ImmutableMap.of(Constants.WORKER_JOB_NAME, "2g", Constants.PS_JOB_NAME, "3g"),
         Severity.SEVERE
