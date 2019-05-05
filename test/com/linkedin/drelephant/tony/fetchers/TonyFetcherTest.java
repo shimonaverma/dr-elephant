@@ -109,7 +109,7 @@ public class TonyFetcherTest {
     TonyFetcher tonyFetcher = new TonyFetcher(configData);
 
     AnalyticJob job = new AnalyticJob();
-    ApplicationType tonyAppType = new ApplicationType("TONY");
+    ApplicationType tonyAppType = new ApplicationType(Constants.APP_TYPE);
     job.setFinishTime(_endDate.getTime());
     job.setAppId(APPLICATION_ID);
     job.setAppType(tonyAppType);
