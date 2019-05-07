@@ -437,7 +437,7 @@ play_command $OPTS dist
 cd target/universal
 
 ZIP_NAME=`/bin/ls *.zip`
-unzip -f ${ZIP_NAME}
+unzip -of ${ZIP_NAME}
 rm ${ZIP_NAME}
 DIST_NAME=${ZIP_NAME%.zip}
 

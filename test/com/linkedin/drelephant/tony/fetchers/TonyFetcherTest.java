@@ -22,6 +22,7 @@ import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.analysis.ApplicationType;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.tony.data.TonyApplicationData;
+import com.linkedin.drelephant.tony.data.TonyTaskData;
 import com.linkedin.tony.Constants;
 import com.linkedin.tony.TonyConfigurationKeys;
 import com.linkedin.tony.events.Event;
@@ -118,7 +119,7 @@ public class TonyFetcherTest {
     Assert.assertEquals(APPLICATION_ID, appData.getAppId());
     Assert.assertEquals(tonyAppType, appData.getApplicationType());
     Assert.assertEquals("bar", appData.getConf().get("foo"));
-    Map<String, Map<Integer, List<Metric>>> metricsMap = appData.getMetricsMap();
+    Map<String, Map<Integer, TonyTaskData>> metricsMap = appData.getTaskMap();
     Assert.assertEquals(2, metricsMap.size());
     Assert.assertEquals(2, metricsMap.get("worker").size());
     Assert.assertEquals(1, metricsMap.get("ps").size());
