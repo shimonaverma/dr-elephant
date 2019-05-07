@@ -21,10 +21,11 @@ import com.linkedin.drelephant.analysis.HeuristicResultDetails;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
 import com.linkedin.drelephant.tony.data.TonyApplicationData;
+import com.linkedin.drelephant.tony.data.TonyTaskData;
+import com.linkedin.drelephant.tony.util.TonyUtils;
 import com.linkedin.drelephant.util.Utils;
 import com.linkedin.tony.Constants;
 import com.linkedin.tony.TonyConfigurationKeys;
-import com.linkedin.tony.events.Metric;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,7 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
 
   @Override
   public HeuristicResult apply(TonyApplicationData data) {
-    Map<String, Map<Integer, List<Metric>>> metrics = data.getMetricsMap();
+    Map<String, Map<Integer, TonyTaskData>> taskMap = data.getTaskMap();
     Configuration conf = data.getConfiguration();
 
     Set<String> taskTypes = com.linkedin.tony.util.Utils.getAllJobTypes(conf);
@@ -82,16 +83,7 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
       }
 
       // get global max memory per task
-      double maxMemoryBytesUsed = 0;
-      for (List<Metric> taskMetrics : metrics.get(taskType).values()) {
-        for (Metric metric : taskMetrics) {
-          if (metric.getName().equals(Constants.MAX_MEMORY_BYTES)) {
-            if (metric.getValue() > maxMemoryBytesUsed) {
-              maxMemoryBytesUsed = metric.getValue();
-            }
-          }
-        }
-      }
+      double maxMemoryBytesUsed = TonyUtils.getMaxMemoryBytesUsedForTaskType(taskMap, taskType);
 
       // compare to threshold and update severity
       double maxMemoryRatio = maxMemoryBytesUsed / taskBytesRequested;
@@ -101,7 +93,7 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
 
       // add heuristic details
       details.add(new HeuristicResultDetails("Number of " + taskType + " tasks",
-          Integer.toString(metrics.get(taskType).size())));
+          Integer.toString(taskMap.get(taskType).size())));
       details.add(new HeuristicResultDetails("Requested memory (MB) per " + taskType + " task",
           Long.toString(taskBytesRequested / FileUtils.ONE_MB)));
       details.add(new HeuristicResultDetails("Max memory (MB) used in any " + taskType + " task",

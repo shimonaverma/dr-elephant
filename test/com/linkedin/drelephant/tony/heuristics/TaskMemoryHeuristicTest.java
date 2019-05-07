@@ -24,9 +24,13 @@ import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationDa
 import com.linkedin.drelephant.tony.data.TonyApplicationData;
 import com.linkedin.tony.Constants;
 import com.linkedin.tony.TonyConfigurationKeys;
+import com.linkedin.tony.events.Event;
+import com.linkedin.tony.events.EventType;
 import com.linkedin.tony.events.Metric;
+import com.linkedin.tony.events.TaskFinished;
+import com.linkedin.tony.rpc.impl.TaskStatus;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
@@ -130,20 +134,22 @@ public class TaskMemoryHeuristicTest {
 
   public void testHelper(Map<String, double[]> memUsed, Map<String, String> memRequested, Severity expectedSeverity) {
     Configuration conf = new Configuration(false);
-    Map<String, Map<Integer, List<Metric>>> metricsMap = new HashMap<>();
+    List<Event> events = new ArrayList<>();
     for (Map.Entry<String, String> entry : memRequested.entrySet()) {
       String taskType = entry.getKey();
       conf.set(TonyConfigurationKeys.getResourceKey(taskType, Constants.MEMORY), entry.getValue());
       conf.setInt(TonyConfigurationKeys.getInstancesKey(taskType), memUsed.get(taskType).length);
-      metricsMap.put(taskType, new HashMap<>());
+
       for (int i = 0; i < memUsed.get(taskType).length; i++) {
-        metricsMap.get(taskType).put(i,
-            ImmutableList.of(new Metric(Constants.MAX_MEMORY_BYTES, memUsed.get(taskType)[i])));
+        events.add(new Event(EventType.TASK_FINISHED,
+            new TaskFinished(taskType, i, TaskStatus.SUCCEEDED.toString(),
+                ImmutableList.of(new Metric(Constants.MAX_MEMORY_BYTES, memUsed.get(taskType)[i]))),
+            System.currentTimeMillis()));
       }
     }
 
     ApplicationType appType = new ApplicationType(Constants.APP_TYPE);
-    TonyApplicationData data = new TonyApplicationData("application_123_456", appType, conf, metricsMap);
+    TonyApplicationData data = new TonyApplicationData("application_123_456", appType, conf, events);
 
     TaskMemoryHeuristic heuristic = new TaskMemoryHeuristic(new HeuristicConfigurationData("ignored",
         "ignored", "ignored", appType, Collections.EMPTY_MAP));

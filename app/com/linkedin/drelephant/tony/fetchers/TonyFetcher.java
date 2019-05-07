@@ -53,20 +53,7 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
     _fs = _finishedDir.getFileSystem(conf);
   }
 
-  private static Map<String, Map<Integer, List<Metric>>> parseMetricsMap(List<Event> events) {
-    Map<String, Map<Integer, List<Metric>>> metricsMap = new HashMap<>();
-    for (Event e : events) {
-      if (e.getType().equals(EventType.TASK_FINISHED)) {
-        TaskFinished taskFinishedEvent = (TaskFinished) e.getEvent();
-        if (!metricsMap.containsKey(taskFinishedEvent.getTaskType())) {
-          metricsMap.put(taskFinishedEvent.getTaskType(), new HashMap<>());
-        }
-        metricsMap.get(taskFinishedEvent.getTaskType()).put(taskFinishedEvent.getTaskIndex(),
-            taskFinishedEvent.getMetrics());
-      }
-    }
-    return metricsMap;
-  }
+
 
   @Override
   public TonyApplicationData fetchData(AnalyticJob job) throws Exception {
@@ -81,14 +68,20 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
     String yearMonthDay = ParserUtils.getYearMonthDayDirectory(date);
     Path jobDir = new Path(_finishedDir, yearMonthDay + Path.SEPARATOR + job.getAppId());
 
-    Map<String, Map<Integer, List<Metric>>> metricsMap = parseMetricsMap(ParserUtils.parseEvents(_fs, jobDir));
-
+    // parse config
     Path confFile = new Path(jobDir, Constants.TONY_FINAL_XML);
+    if (!_fs.exists(confFile)) {
+      // for backward compatibility, see https://github.com/linkedin/TonY/issues/271
+      confFile = new Path(jobDir, "config.xml");
+    }
     Configuration conf = new Configuration(false);
     if (_fs.exists(confFile)) {
       conf.addResource(_fs.open(confFile));
     }
 
-    return new TonyApplicationData(job.getAppId(), job.getAppType(), conf, metricsMap);
+    // parse events
+    List<Event> events = ParserUtils.parseEvents(_fs, jobDir);
+
+    return new TonyApplicationData(job.getAppId(), job.getAppType(), conf, events);
   }
 }
