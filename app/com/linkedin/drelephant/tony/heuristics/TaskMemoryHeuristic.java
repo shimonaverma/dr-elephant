@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -39,6 +40,7 @@ import org.apache.hadoop.conf.Configuration;
  * and compares against some thresholds. The final severity is the highest severity across all task types.
  */
 public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
+  private static final Logger _LOGGER = Logger.getLogger(TaskMemoryHeuristic.class);
   private static final int DEFAULT_CONTAINER_MEMORY_MB = 2048;
   private static final String CONTAINER_MEMORY_DEFAULT_MB_CONF = "container_memory_default_mb";
   private static final String TASK_MEMORY_THRESHOLDS_CONF = "task_memory_thresholds";
@@ -65,6 +67,7 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
 
   @Override
   public HeuristicResult apply(TonyApplicationData data) {
+    _LOGGER.debug("Applying TaskMemoryHeuristic");
     Map<String, Map<Integer, TonyTaskData>> taskMap = data.getTaskMap();
     Configuration conf = data.getConfiguration();
 
@@ -73,31 +76,34 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
     List<HeuristicResultDetails> details = new ArrayList<>();
 
     for (String taskType : taskTypes) {
+      details.add(new HeuristicResultDetails("Number of " + taskType + " tasks",
+          Integer.toString(taskMap.get(taskType).size())));
+
       // get per task memory requested
       String memoryString = conf.get(TonyConfigurationKeys.getResourceKey(taskType, Constants.MEMORY));
       String memoryStringMB = com.linkedin.tony.util.Utils.parseMemoryString(memoryString);
       long taskBytesRequested = Long.parseLong(memoryStringMB) * FileUtils.ONE_MB;
+      details.add(new HeuristicResultDetails("Requested memory (MB) per " + taskType + " task",
+          Long.toString(taskBytesRequested / FileUtils.ONE_MB)));
+
+      // get global max memory per task
+      double maxMemoryBytesUsed = TonyUtils.getMaxMemoryBytesUsedForTaskType(taskMap, taskType);
+      if (maxMemoryBytesUsed <= 0) {
+        details.add(new HeuristicResultDetails("Max memory (MB) used in any " + taskType + " task", "Unknown"));
+        continue;
+      }
+      details.add(new HeuristicResultDetails("Max memory (MB) used in any " + taskType + " task",
+          Long.toString((long) maxMemoryBytesUsed / FileUtils.ONE_MB)));
+
+      // compare to threshold and update severity
       if (taskBytesRequested <= defaultContainerMemoryBytes) {
         // If using default container memory, automatic pass
         continue;
       }
-
-      // get global max memory per task
-      double maxMemoryBytesUsed = TonyUtils.getMaxMemoryBytesUsedForTaskType(taskMap, taskType);
-
-      // compare to threshold and update severity
       double maxMemoryRatio = maxMemoryBytesUsed / taskBytesRequested;
       Severity taskMemorySeverity = Severity.getSeverityDescending(maxMemoryRatio, maxMemoryLimits[0],
           maxMemoryLimits[1], maxMemoryLimits[2], maxMemoryLimits[3]);
       finalSeverity = Severity.max(finalSeverity, taskMemorySeverity);
-
-      // add heuristic details
-      details.add(new HeuristicResultDetails("Number of " + taskType + " tasks",
-          Integer.toString(taskMap.get(taskType).size())));
-      details.add(new HeuristicResultDetails("Requested memory (MB) per " + taskType + " task",
-          Long.toString(taskBytesRequested / FileUtils.ONE_MB)));
-      details.add(new HeuristicResultDetails("Max memory (MB) used in any " + taskType + " task",
-          Long.toString((long) maxMemoryBytesUsed / FileUtils.ONE_MB)));
     }
 
     return new HeuristicResult(_heuristicConfData.getClassName(), _heuristicConfData.getHeuristicName(), finalSeverity,
