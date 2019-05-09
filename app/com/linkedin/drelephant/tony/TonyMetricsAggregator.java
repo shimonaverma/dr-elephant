@@ -37,6 +37,10 @@ public class TonyMetricsAggregator implements HadoopMetricsAggregator {
 
   private HadoopAggregatedData _hadoopAggregatedData;
 
+  /**
+   * Creates a new {@code TonyMetricsAggregator}.
+   * @param unused  Dr. Elephant expects a constructor of this form but {@code TonyMetricsAggregator} does not need this
+   */
   public TonyMetricsAggregator(AggregatorConfigurationData unused) { }
 
   @Override

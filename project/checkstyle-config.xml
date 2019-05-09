@@ -32,7 +32,7 @@
 
   <!-- *********************** Issues which will be treated as errors hence enforced *********************** -->
   <!-- FILE HEADER as per format given in the header file configured below -->
-  <module name="Header">
+  <module name="RegexpHeader">
     <property name="headerFile" value="project/checkstyle-java.header"/>
     <property name="fileExtensions" value="java"/>
   </module>

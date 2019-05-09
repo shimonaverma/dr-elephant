@@ -27,31 +27,61 @@ public class TonyTaskData {
   private long _taskEndTime;
   private List<Metric> _metrics;
 
+  /**
+   * Creates a new {@code TonyTaskData} encapsulating a task's data, such as task type, index, start time,
+   * end time, and metrics.
+   * @param taskType  the task type
+   * @param taskIndex  the task index
+   */
   public TonyTaskData(String taskType, int taskIndex) {
     _taskType = taskType;
     _taskIndex = taskIndex;
   }
 
+  /**
+   * Get task start time.
+   * @return  the task start time
+   */
   public long getTaskStartTime() {
     return _taskStartTime;
   }
 
+  /**
+   * Set task start time.
+   * @param taskStartTime  the task start time
+   */
   public void setTaskStartTime(long taskStartTime) {
     _taskStartTime = taskStartTime;
   }
 
+  /**
+   * Get task end time.
+   * @return  the task end time
+   */
   public long getTaskEndTime() {
     return _taskEndTime;
   }
 
+  /**
+   * Set task end time.
+   * @param taskEndTime  the end time
+   */
   public void setTaskEndTime(long taskEndTime) {
     _taskEndTime = taskEndTime;
   }
 
+  /**
+   * Get the metrics for this task.
+   * @return  the metrics
+   */
   public List<Metric> getMetrics() {
     return _metrics;
   }
 
+  /**
+   * Sets the metrics for this task.
+   * @param metrics  the metrics
+   */
   public void setMetrics(List<Metric> metrics) {
     _metrics = metrics;
   }

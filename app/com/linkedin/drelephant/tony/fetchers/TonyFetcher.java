@@ -37,6 +37,11 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
   private final Path _finishedDir;
   private final FileSystem _fs;
 
+  /**
+   * Constructor for {@link TonyFetcher}.
+   * @param fetcherConfig  the fetcher configuration
+   * @throws IOException
+   */
   public TonyFetcher(FetcherConfigurationData fetcherConfig) throws IOException {
     Configuration conf = new Configuration();
 

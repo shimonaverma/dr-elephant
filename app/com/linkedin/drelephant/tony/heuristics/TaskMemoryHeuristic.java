@@ -51,6 +51,10 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
   // Initialized to default max memory thresholds
   private double[] maxMemoryLimits = {0.8, 0.7, 0.6, 0.5};
 
+  /**
+   * Constructor for {@link TaskMemoryHeuristic}.
+   * @param heuristicConfData  the configuration for this heuristic
+   */
   public TaskMemoryHeuristic(HeuristicConfigurationData heuristicConfData) {
     this._heuristicConfData = heuristicConfData;
 

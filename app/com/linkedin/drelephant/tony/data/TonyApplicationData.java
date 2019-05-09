@@ -35,6 +35,13 @@ public class TonyApplicationData implements HadoopApplicationData {
   private Properties _props;
   private Map<String, Map<Integer, TonyTaskData>> _taskMap;
 
+  /**
+   * Constructor for {@code TonyApplicationData}.
+   * @param appId  application id
+   * @param appType  application type (should be TONY)
+   * @param configuration  the configuration for this application
+   * @param events  the events emitted by this application
+   */
   public TonyApplicationData(String appId, ApplicationType appType, Configuration configuration, List<Event> events) {
     _appId = appId;
     _appType = appType;
@@ -54,6 +61,10 @@ public class TonyApplicationData implements HadoopApplicationData {
     return _appId;
   }
 
+  /**
+   * Returns the {@link Configuration} for this application.
+   * @return  the configuration for this application
+   */
   public Configuration getConfiguration() {
     return _configuration;
   }
@@ -68,6 +79,10 @@ public class TonyApplicationData implements HadoopApplicationData {
     return _appType;
   }
 
+  /**
+   * Returns a map of task data.
+   * @return  a map from task type to a map of task index to task data
+   */
   public Map<String, Map<Integer, TonyTaskData>> getTaskMap() {
     return _taskMap;
   }
