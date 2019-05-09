@@ -22,6 +22,7 @@ tmp
 dump
 .history
 /*.iml
+/dr-elephant-*/
 /out
 
 # Eclipse

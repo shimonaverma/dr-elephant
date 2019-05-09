@@ -62,6 +62,10 @@ public class TonyMetricsAggregator implements HadoopMetricsAggregator {
         long taskDurationSec = (taskData.getTaskEndTime() - taskData.getTaskStartTime()) / Statistics.SECOND_IN_MS;
         mbSecUsed += mbRequested * taskDurationSec;
 
+        if (maxMemoryMBUsed <= 0) {
+          // If we don't have max memory metrics, don't calculate wasted memory.
+          continue;
+        }
         long wastedMemory = (long) (mbRequested - maxMemoryMBUsed * MEMORY_BUFFER);
         if (wastedMemory > 0) {
           mbSecWasted += wastedMemory * taskDurationSec;
