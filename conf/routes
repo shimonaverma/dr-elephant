@@ -33,6 +33,7 @@ GET        /newjobhistory                       controllers.Application.jobHisto
 GET        /newhelp                             controllers.Application.help()
 
 # Rest calls
+GET        /rest/newgraphdata                   controllers.Application.restNewGraphData(id: String)
 GET        /rest/job                            controllers.Application.restAppResult(id: String)
 GET        /rest/jobexec                        controllers.Application.restJobExecResult(id: String)
 GET        /rest/flowexec                       controllers.Application.restFlowExecResult(id: String)

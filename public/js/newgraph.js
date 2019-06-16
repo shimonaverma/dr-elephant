@@ -13,20 +13,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-import DS from 'ember-data';
 
-export default DS.Model.extend({
-  jobSuggestedParamSetId: DS.attr('string'),
-  jobDefinitionId: DS.attr('string'),
-  autoApply: DS.attr('boolean'),
-  isAlgorithmTypeChanged: DS.attr('boolean'),
-  isIterationCountChanged: DS.attr('boolean'),
-  isAutoTuningChanged: DS.attr('boolean'),
-  tuningAlgorithmId: DS.attr('number'),
-  tuningAlgorithm: DS.attr('string'),
-  tuningAlgorithmList: DS.attr(),
-  iterationCount: DS.attr('number'),
-  tuningParameters: DS.attr(),
-  reasonForTuningDisable: DS.attr('string')
-  //ignoredHeuristics: DS.attr()
+$(document).ready(function(){
+
+  /* Plot graph for data obtained from ajax call */
+  $.getJSON('/rest/newgraphdata?id=' + queryString()['job-def-id'], function(data) {
+    //updateExecTimezone(data);
+    plotter(data, []);
+  });
+
+  //loadTableTooltips();
 });
+

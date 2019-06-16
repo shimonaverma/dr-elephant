@@ -1320,6 +1320,7 @@ public class Application extends Controller {
     }
 
     // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
+    //direct database query for appllications with given flowadefId
     List<AppResult> results = getRestFlowAppResults(flowDefId);
 
     if (results.size() == 0) {
@@ -1814,6 +1815,17 @@ public class Application extends Controller {
       JsonArray tuningParameters = getTuningParameterDetails(parametersList, jobSuggestedParamSet, userSuggestedParamSet);
       String currentTuningAlgorithm = getCurrentTuningAlgorithmName(tuningAlgorithm);
       JsonArray tuningAlgorithmList = new JsonArray();
+
+//      JsonArray ignoredHeuristics = new JsonArray();
+////      JsonObject igHeu = new JsonObject();
+//      JsonObject mapperSkew = new JsonObject();
+//      mapperSkew.addProperty("name", "Mapper Skew");
+//      ignoredHeuristics.add(mapperSkew);
+////      igHeu.add("Mapper Skew");
+////      igHeu.add("Reducer GC");
+////      igHeu.add("Reducer Skew");
+//      tuneIn.add("ignoredHeuristics",ignoredHeuristics);
+
       tuneIn.addProperty(ID, jobId);
       tuneIn.addProperty(JOB_DEFINTITION_ID, jobDefinitionId);
       //Two tuning types {HBT, OBT}
@@ -2493,4 +2505,72 @@ public class Application extends Controller {
     return tuningParameter;
   }
 
+
+
+  public static Result restNewGraphData(String jobDefId) {
+
+    JsonArray datasets = new JsonArray();
+    if (jobDefId == null || jobDefId.isEmpty()) {
+      return ok(new Gson().toJson(datasets));
+    }
+
+    // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
+    //direct database query for appllications with given flowadefId
+    List<JobExecution> results = getNewGraphData(jobDefId);
+
+    if (results.size() == 0) {
+      logger.info("No results for Job url");
+    }
+
+      for (JobExecution result : results) {
+        JsonObject dataset = new JsonObject();
+        dataset.addProperty("resourceused", result.resourceUsage);
+        dataset.addProperty("inputSizeInBytes", result.inputSizeInBytes);
+        dataset.addProperty("executionTime", result.executionTime);
+
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(result.createdTs);
+        dataset.addProperty("createdTs", timeStamp);
+
+
+        datasets.add(dataset);
+      }
+
+      JobSuggestedParamSet result2 = getTimeStamp( jobDefId);
+
+
+      JsonObject dataset = new JsonObject();
+    String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(result2.createdTs);
+    dataset.addProperty("timeAutotuningEnabled", timeStamp);
+
+      datasets.add(dataset);
+
+    return ok(new Gson().toJson(datasets));
+
+  }
+
+  private static List<JobExecution> getNewGraphData(String jobDefId) {
+    // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
+    List<JobExecution> results = JobExecution.find.select("*")
+        .where()
+        .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , 100148 )
+        .order()
+        .desc(JobExecution.TABLE.createdTs)
+        .setMaxRows(10)
+        .findList();
+
+    return results;
+  }
+
+private static JobSuggestedParamSet getTimeStamp(String jobDefId) {
+  JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
+      .where()
+      .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id, 100148)
+      .eq(JobSuggestedParamSet.TABLE.isParamSetSuggested, true)
+      .eq(JobSuggestedParamSet.TABLE.paramSetState, "FITNESS_COMPUTED")
+      .order()
+      .asc(JobSuggestedParamSet.TABLE.createdTs)
+      .findUnique();
+
+  return jobSuggestedParamSet;
+}
 }

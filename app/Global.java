@@ -1,19 +1,3 @@
-/*
- * Copyright 2016 LinkedIn Corp.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
-
 import com.linkedin.drelephant.DrElephant;
 import com.sun.security.sasl.util.AbstractSaslImpl;
 
@@ -25,6 +9,11 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.logging.Level;
+import play.libs.F;
+import play.mvc.Action;
+import play.mvc.Http;
+import play.mvc.Result;
+import play.mvc.SimpleResult;
 
 
 /**
@@ -87,4 +76,29 @@ public class Global extends GlobalSettings {
     modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
     field.set(null, newValue);
   }
+
+  private class ActionWrapper extends Action.Simple {
+    public ActionWrapper(Action<?> action) {
+      this.delegate = action;
+    }
+
+    @Override
+    public F.Promise<SimpleResult> call(Http.Context ctx) throws java.lang.Throwable {
+      F.Promise<SimpleResult> result = this.delegate.call(ctx);
+      Http.Response response = ctx.response();
+      response.setHeader("Access-Control-Allow-Origin", "*");
+      response.setHeader("Allow", "*");
+      response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS");
+      response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Referer, User-Agent");
+      return result;
+    }
+  }
+
+  @Override
+  public Action<?> onRequest(Http.Request request, java.lang.reflect.Method actionMethod) {
+    return new ActionWrapper(super.onRequest(request, actionMethod));
+  }
+
+
+
 }
