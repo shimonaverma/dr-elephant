@@ -2507,52 +2507,69 @@ public class Application extends Controller {
 
 
 
-  public static Result restNewGraphData(String jobDefId) {
+  public static Result restNewGraphData(String jobId) {
+
 
     JsonArray datasets = new JsonArray();
-    if (jobDefId == null || jobDefId.isEmpty()) {
+    if (jobId == null || jobId.isEmpty()) {
       return ok(new Gson().toJson(datasets));
     }
 
+    JobDefinition jobDef = getJobDefIdFromJobId(jobId);
+
+   // int jobDefId = 0;
+    Integer jobDefId = jobDef.id;
+
+
     // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
-    //direct database query for appllications with given flowadefId
+    //direct database query for appllications with given flowdefId
     List<JobExecution> results = getNewGraphData(jobDefId);
 
     if (results.size() == 0) {
       logger.info("No results for Job url");
     }
 
-      for (JobExecution result : results) {
+
+
+    for (JobExecution result : results) {
         JsonObject dataset = new JsonObject();
         dataset.addProperty("resourceused", result.resourceUsage);
         dataset.addProperty("inputSizeInBytes", result.inputSizeInBytes);
         dataset.addProperty("executionTime", result.executionTime);
 
-        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(result.createdTs);
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result.createdTs);
         dataset.addProperty("createdTs", timeStamp);
-
-
         datasets.add(dataset);
-      }
 
-      JobSuggestedParamSet result2 = getTimeStamp( jobDefId);
+    }
 
-
-      JsonObject dataset = new JsonObject();
-    String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(result2.createdTs);
+    JobSuggestedParamSet result2 = getTimeStamp( jobDefId);
+    JsonObject dataset = new JsonObject();
+    String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result2.createdTs);
     dataset.addProperty("timeAutotuningEnabled", timeStamp);
-
-      datasets.add(dataset);
+    //dataset.addProperty("jobdefid", jobDefId);
+    datasets.add(dataset);
 
     return ok(new Gson().toJson(datasets));
 
   }
 
-  private static List<JobExecution> getNewGraphData(String jobDefId) {
+
+  private static JobDefinition getJobDefIdFromJobId(String jobId) {
+
+    JobDefinition jobDefinition = JobDefinition.find.select("*")
+        .where()
+        .eq(JobDefinition.TABLE.jobDefId, jobId)
+        .findUnique();
+
+    return jobDefinition;
+  }
+
+  private static List<JobExecution> getNewGraphData(Integer jobDefId) {
     // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
     List<JobExecution> results = JobExecution.find.select("*")
         .where()
-        .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , 100148 )
+        .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , jobDefId )
         .order()
         .desc(JobExecution.TABLE.createdTs)
         .setMaxRows(10)
@@ -2561,14 +2578,15 @@ public class Application extends Controller {
     return results;
   }
 
-private static JobSuggestedParamSet getTimeStamp(String jobDefId) {
+private static JobSuggestedParamSet getTimeStamp(Integer jobDefId) {
   JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
       .where()
-      .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id, 100148)
+      .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id, jobDefId)
       .eq(JobSuggestedParamSet.TABLE.isParamSetSuggested, true)
       .eq(JobSuggestedParamSet.TABLE.paramSetState, "FITNESS_COMPUTED")
       .order()
       .asc(JobSuggestedParamSet.TABLE.createdTs)
+      .setMaxRows(1)
       .findUnique();
 
   return jobSuggestedParamSet;
