@@ -2529,27 +2529,38 @@ public class Application extends Controller {
       logger.info("No results for Job url");
     }
 
-
-
+    JobSuggestedParamSet result2 = getTimeStamp( jobDefId);
+   // String timeStamp1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result2.createdTs);
+    JsonObject tuningEnabled = new JsonObject();
+    int flag=0;
     for (JobExecution result : results) {
         JsonObject dataset = new JsonObject();
         dataset.addProperty("resourceused", result.resourceUsage);
-        dataset.addProperty("inputSizeInBytes", result.inputSizeInBytes);
+        dataset.addProperty("inputSizeInBytes", Math.round(((result.inputSizeInBytes/(1024*1024*1024))*100.00)/100.00));
         dataset.addProperty("executionTime", result.executionTime);
 
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result.createdTs);
         dataset.addProperty("createdTs", timeStamp);
         datasets.add(dataset);
 
+
+        if(result.createdTs.after(result2.createdTs))
+        {
+          if(flag==0){
+            tuningEnabled.addProperty("createdTs", timeStamp);
+            tuningEnabled.addProperty("autoTuningEnabled", 1);
+
+          }
+          flag = 1;
+        }
+      dataset.addProperty("autoTuningEnabled", flag);
+
+
     }
 
-    JobSuggestedParamSet result2 = getTimeStamp( jobDefId);
-    JsonObject dataset = new JsonObject();
-    String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result2.createdTs);
-    dataset.addProperty("timeAutotuningEnabled", timeStamp);
-    //dataset.addProperty("jobdefid", jobDefId);
-    datasets.add(dataset);
-
+    if(flag==1){
+      datasets.add(tuningEnabled);
+    }
     return ok(new Gson().toJson(datasets));
 
   }
@@ -2571,7 +2582,7 @@ public class Application extends Controller {
         .where()
         .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , jobDefId )
         .order()
-        .desc(JobExecution.TABLE.createdTs)
+        .asc(JobExecution.TABLE.createdTs)
         .setMaxRows(10)
         .findList();
 
