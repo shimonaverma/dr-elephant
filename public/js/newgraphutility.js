@@ -48,11 +48,11 @@ function plotter(data , jobDefList) {
           .range([2*MARGINS.left, GRAPH_WIDTH-MARGINS.right])
           .domain(d3.extent(data, function(d) { return d.createdTs; })),
 
-      yScale = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+40])
+      yScale = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+30])
           .domain([0, Math.max(d3.max(data, function (d) { return Math.max(d.inputSizeInBytes) }),d3.max(data, function (d) { return Math.max(d.resourceused) }))]);
 
-  var yScaleRight = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top + 40])
-      .domain([d3.min(data, function (d) { return Math.min(d.executionTime) }), d3.max(data, function (d) { return Math.max(d.executionTime) })]);
+  var yScaleRight = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+30 ]).domain([d3.min(data, function (d) { return Math.min(d.executionTime) }),
+    d3.max(data, function (d) { return Math.max(d.executionTime) })]);
 
   var customTimeFormat = d3.time.format("%b-%d %I:%M:%S");
 
@@ -104,6 +104,7 @@ function plotter(data , jobDefList) {
       .attr("class", "y axis")
       .attr("transform", "translate(" + (GRAPH_WIDTH) + ", 0)")
       .call(yAxisRight)
+      .attr("id", "ExecTimeAxis")
       .selectAll("text")
       .attr("fill", "rgb(0, 119, 181)");
 
@@ -129,7 +130,7 @@ function plotter(data , jobDefList) {
       .attr("x", GRAPH_WIDTH - 18)
       .attr("width", 14)
       .attr("height", 14)
-      .style("fill", 'green' );
+      .style("fill", 'blue' );
 
   graphContainer.append("text")
       .attr("x", GRAPH_WIDTH - 26)
@@ -157,13 +158,24 @@ function plotter(data , jobDefList) {
       .attr("y", 40)
       .attr("width", 14)
       .attr("height", 14)
-      .style("fill", 'blue' );
+      .style("fill", 'green' );
 
   graphContainer.append("text")
-      .attr("x", GRAPH_WIDTH - 26)
+      .attr("x", GRAPH_WIDTH - 30)
       .attr("y", 49)
       .attr("dy", ".30em")
       .style("text-anchor", "end")
+      .on("click", function(){
+        // Determine if current line is visible
+        var active   = ExecTime.active ? false : true,
+            newOpacity = active ? 0 : 1;
+        // Hide or show the elements
+        d3.select("#ExecTime").style("opacity", newOpacity);
+        // d3.select("#ExecTimeDots").style("opacity", newOpacity);
+        d3.select("#ExecTimeAxis").style("opacity", newOpacity);
+        // Update whether or not the elements are active
+        ExecTime.active = active;
+      })
       .text(function(d) { return "Execution Time" });
 
 
@@ -194,10 +206,10 @@ function plotter(data , jobDefList) {
       .selectAll("scatter-dots")
       .data(data)
       .enter().append("svg:circle")
-      .style({stroke: 'white', fill: 'green'})
+      .style({stroke: 'white', fill: 'blue'})
       .attr("cx", function (d) { return xScale(d.createdTs); } )
       .attr("cy", function (d) { return yScale(d.resourceused); } )
-      .attr("r", 5);
+      .attr("r", 7);
 
   graphContainer.append("svg:g")
       .selectAll("scatter-dots")
@@ -209,22 +221,22 @@ function plotter(data , jobDefList) {
       .attr("r", 5);
 
 
-  graphContainer.append("svg:g")
-      .selectAll("scatter-dots")
-      .data(data)
-      .enter().append("svg:circle")
-      .style({stroke: 'white', fill: 'blue'})
-      .attr("cx", function (d) { return xScale(d.createdTs); } )
-      .attr("cy", function (d) { return yScaleRight(d.executionTime); } )
-      .attr("r", 5);
+  // graphContainer.append("svg:g")
+  //     .selectAll("scatter-dots")
+  //     .data(data)
+  //     .enter().append("svg:circle")
+  //     .style({stroke: 'white', fill: 'green'})
+  //     .attr("cx", function (d) { return xScale(d.createdTs); } )
+  //     .attr("cy", function (d) { return yScaleRight(d.executionTime); } )
+  //     .attr("r", 5);
 
 
 //plot linear graphs
 
   graphContainer.append('svg:path')
       .attr('d', lineGen(data))
-      .attr('stroke', 'green')
-      .attr('stroke-width', 2)
+      .attr('stroke', 'blue')
+      .attr('stroke-width', 3.5)
       .attr('fill', 'none');
 
 
@@ -236,8 +248,9 @@ function plotter(data , jobDefList) {
 
   graphContainer.append('svg:path')
       .attr('d', lineGenExecTime(data))
-      .attr('stroke', 'blue')
-      .attr('stroke-width', 2)
+      .attr("id", "ExecTime")
+      .attr('stroke', 'green')
+      .attr('stroke-width', 1)
       .attr('fill', 'none');
 
 
@@ -245,7 +258,7 @@ function plotter(data , jobDefList) {
 
   graphContainer.append('svg:line')
       .style('stroke', 'black')
-      .attr('stroke-width', 2)
+      .attr('stroke-width', 1)
       .attr('x1', xScale(parseDate(lastEle.createdTs)))
       .attr('y1', MARGINS.top-5)
       .attr('x2', xScale(parseDate(lastEle.createdTs)))

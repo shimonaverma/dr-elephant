@@ -2541,7 +2541,21 @@ public class Application extends Controller {
 
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result.createdTs);
         dataset.addProperty("createdTs", timeStamp);
-        datasets.add(dataset);
+
+        List<JobSuggestedParamValue> SuggestedParamValue = getJobParameters(result.id);
+//
+//      JsonArray parameters = new JsonArray();
+//
+//      for(JobSuggestedParamValue suggestedValue : SuggestedParamValue){
+//        JsonObject suggestedParam = new JsonObject();
+//
+//        suggestedParam.addProperty("parameterId",suggestedValue.id);
+//        parameters.add(suggestedParam);
+//        }
+      dataset.add("suggestedParameters", SuggestedParamValue.size());
+
+
+      datasets.add(dataset);
 
 
         if(result.createdTs.after(result2.createdTs))
@@ -2566,6 +2580,25 @@ public class Application extends Controller {
   }
 
 
+  private static List<JobSuggestedParamValue> getJobParameters(Long jobExecId){
+    TuningJobExecutionParamSet jobSuggestedParamSetId = TuningJobExecutionParamSet.find
+        .select("*")
+        .where()
+        .eq(TuningJobExecutionParamSet.TABLE.jobExecution + '.' + JobExecution.TABLE.id, jobExecId)
+        .setMaxRows(1)
+        .findUnique();
+
+    List<JobSuggestedParamValue> jobSuggestedParameters = JobSuggestedParamValue.find
+        .select("*")
+        .where()
+        .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id , jobSuggestedParamSetId.jobSuggestedParamSet)
+        .findList()
+        ;
+
+    return jobSuggestedParameters;
+  }
+
+
   private static JobDefinition getJobDefIdFromJobId(String jobId) {
 
     JobDefinition jobDefinition = JobDefinition.find.select("*")
@@ -2581,9 +2614,10 @@ public class Application extends Controller {
     List<JobExecution> results = JobExecution.find.select("*")
         .where()
         .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , jobDefId )
+        .eq(JobExecution.TABLE.executionState , "SUCCEEDED" )
         .order()
         .asc(JobExecution.TABLE.createdTs)
-        .setMaxRows(10)
+        .setMaxRows(20)
         .findList();
 
     return results;
