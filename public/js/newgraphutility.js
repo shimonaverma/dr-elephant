@@ -33,6 +33,10 @@ function plotter(data , jobDefList) {
 
   data.pop();
 
+  var lastEle2 = data[data.length-1];
+
+  data.pop();
+
   var graphContainer = d3.select("#visualisation");
   var MARGINS = {top: 50, right: 50, bottom: 100, left: 50},
       WIDTH = graphContainer.style("width").replace("px", ""),
@@ -270,6 +274,25 @@ function plotter(data , jobDefList) {
       .attr("text-anchor", "middle")
       .style("font-size", "16px")
       .text("Autotuning enabled");
+
+  graphContainer.append("text")
+      .attr('x', xScale(parseDate(lastEle2.createdTs)))
+      .attr('y', MARGINS.top )
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .text("Best Parameter Set");
+
+
+
+  graphContainer.append('svg:line')
+      .style('stroke', 'black')
+      //  .data(lastEle)
+      .attr('stroke-width', 1)
+      .attr('x1', xScale(parseDate(lastEle2.createdTs)))
+      .attr('y1', MARGINS.top+5)
+      .attr('x2', xScale(parseDate(lastEle2.createdTs)))
+      .attr('y2', MARGINS.top + GRAPH_HEIGHT);
+
 
 
 }

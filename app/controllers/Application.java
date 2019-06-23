@@ -2517,7 +2517,6 @@ public class Application extends Controller {
 
     JobDefinition jobDef = getJobDefIdFromJobId(jobId);
 
-   // int jobDefId = 0;
     Integer jobDefId = jobDef.id;
 
 
@@ -2530,7 +2529,9 @@ public class Application extends Controller {
     }
 
     JobSuggestedParamSet result2 = getTimeStamp( jobDefId);
-   // String timeStamp1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result2.createdTs);
+    JobSuggestedParamSet bestParameterId = getBestParameterId( jobDefId);
+    TuningJobExecutionParamSet bestParamTime = getBestParamTime(bestParameterId.id);    //merge these two functions
+
     JsonObject tuningEnabled = new JsonObject();
     int flag=0;
     for (JobExecution result : results) {
@@ -2542,45 +2543,57 @@ public class Application extends Controller {
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result.createdTs);
         dataset.addProperty("createdTs", timeStamp);
 
-        List<JobSuggestedParamValue> SuggestedParamValue = getJobParameters(result.id);
-//
-//      JsonArray parameters = new JsonArray();
-//
-//      for(JobSuggestedParamValue suggestedValue : SuggestedParamValue){
-//        JsonObject suggestedParam = new JsonObject();
-//
-//        suggestedParam.addProperty("parameterId",suggestedValue.id);
-//        parameters.add(suggestedParam);
-//        }
-      dataset.add("suggestedParameters", SuggestedParamValue.size());
+      List<JobSuggestedParamValue> SuggestedParamValue = getJobParameters(result.id);
 
 
-      datasets.add(dataset);
+      JsonArray parameters = new JsonArray();
 
+      for(JobSuggestedParamValue suggestedValue : SuggestedParamValue){
+        JsonObject suggestedParam = new JsonObject();
+
+        suggestedParam.addProperty("parameterId",suggestedValue.tuningParameter.id);
+        parameters.add(suggestedParam);
+        }
+//      Long test = idNumber.jobExecution.id;
+        dataset.add("suggestedParameters",parameters );
+        datasets.add(dataset);
 
         if(result.createdTs.after(result2.createdTs))
         {
           if(flag==0){
             tuningEnabled.addProperty("createdTs", timeStamp);
             tuningEnabled.addProperty("autoTuningEnabled", 1);
-
           }
           flag = 1;
         }
-      dataset.addProperty("autoTuningEnabled", flag);
+        dataset.addProperty("autoTuningEnabled", flag);
+      }
 
+    JsonObject bestParam =  new JsonObject();
+    bestParam.addProperty("BestParamId", bestParameterId.id);
+    String timeStamp2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(bestParamTime.createdTs);
 
-    }
+    bestParam.addProperty("createdTs",timeStamp2 );
+    datasets.add(bestParam);
+
 
     if(flag==1){
-      datasets.add(tuningEnabled);
-    }
-    return ok(new Gson().toJson(datasets));
+        datasets.add(tuningEnabled);
+      }
+      return ok(new Gson().toJson(datasets));
 
   }
 
+  private static  TuningJobExecutionParamSet getBestParamTime(Long paramId) {
+    TuningJobExecutionParamSet jobSuggestedParamSetId = TuningJobExecutionParamSet.find.select("*")
+        .where()
+        .eq(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id, paramId)
+        .setMaxRows(1)
+        .findUnique();
+    return jobSuggestedParamSetId;
+  }
 
-  private static List<JobSuggestedParamValue> getJobParameters(Long jobExecId){
+  private static  List<JobSuggestedParamValue> getJobParameters(Long jobExecId){
     TuningJobExecutionParamSet jobSuggestedParamSetId = TuningJobExecutionParamSet.find
         .select("*")
         .where()
@@ -2591,11 +2604,12 @@ public class Application extends Controller {
     List<JobSuggestedParamValue> jobSuggestedParameters = JobSuggestedParamValue.find
         .select("*")
         .where()
-        .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id , jobSuggestedParamSetId.jobSuggestedParamSet)
+        .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id , jobSuggestedParamSetId.jobSuggestedParamSet.id)
         .findList()
         ;
 
     return jobSuggestedParameters;
+//    return jobSuggestedParamSetId;
   }
 
 
@@ -2617,23 +2631,36 @@ public class Application extends Controller {
         .eq(JobExecution.TABLE.executionState , "SUCCEEDED" )
         .order()
         .asc(JobExecution.TABLE.createdTs)
-        .setMaxRows(20)
+//        .setMaxRows(20)
         .findList();
 
     return results;
   }
 
-private static JobSuggestedParamSet getTimeStamp(Integer jobDefId) {
-  JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
-      .where()
-      .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id, jobDefId)
-      .eq(JobSuggestedParamSet.TABLE.isParamSetSuggested, true)
-      .eq(JobSuggestedParamSet.TABLE.paramSetState, "FITNESS_COMPUTED")
-      .order()
-      .asc(JobSuggestedParamSet.TABLE.createdTs)
-      .setMaxRows(1)
-      .findUnique();
+  private static JobSuggestedParamSet getTimeStamp(Integer jobDefId) {
+    JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
+        .where()
+        .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id, jobDefId)
+        .eq(JobSuggestedParamSet.TABLE.isParamSetSuggested, true)
+        .eq(JobSuggestedParamSet.TABLE.paramSetState, "FITNESS_COMPUTED")
+        .order()
+        .asc(JobSuggestedParamSet.TABLE.createdTs)
+        .setMaxRows(1)
+        .findUnique();
 
-  return jobSuggestedParamSet;
-}
+    return jobSuggestedParamSet;
+  }
+
+  private static JobSuggestedParamSet getBestParameterId(Integer jobDefId) {
+    JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
+        .where()
+        .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id, jobDefId)
+        .eq(JobSuggestedParamSet.TABLE.isParamSetBest, true)
+        .order()
+        .asc(JobSuggestedParamSet.TABLE.createdTs)
+        .setMaxRows(1)
+        .findUnique();
+
+    return jobSuggestedParamSet;
+  }
 }
