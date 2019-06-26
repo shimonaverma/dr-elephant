@@ -221,6 +221,19 @@ function plotter(data , jobDefList) {
 
 
   //show bubbles at the plotted points
+  var tooltipWidth = 60;
+  var div =  d3.select("body").append("div")
+      .style("display", "inline")
+      .style("opacity", 0)
+      .attr("width", tooltipWidth + "px")
+      .style("font-size", "12px")
+      .attr("class","graphColor")
+      .style("text-align", "center")
+      .style("border-radius", "5px")
+      .style("padding", "5px")
+      .style("border", "1.5px solid black");
+
+
   graphContainer.append("svg:g")
       .selectAll("scatter-dots")
       .data(data)
@@ -228,7 +241,22 @@ function plotter(data , jobDefList) {
       .style({stroke: 'white', fill: 'blue'})
       .attr("cx", function (d) { return xScale(d.createdTs); } )
       .attr("cy", function (d) { return yScale(d.resourceused); } )
-      .attr("r", 7);
+      .attr("r", 7)
+
+      .on("mouseover", function(d) {
+        div.transition()
+            .duration(50)
+            .style("opacity", .9);
+        div.html(d.jobExecutionId)
+            .style('top', (d3.event.pageY + 10)+'px')
+            .style('left', (d3.event.pageX + 10)+'px');
+        ;
+      })
+      .on("mouseout", function(d) {
+        div.transition()
+            .duration(500)
+            .style("opacity", 0);
+      });
 
   graphContainer.append("svg:g")
       .selectAll("scatter-dots")

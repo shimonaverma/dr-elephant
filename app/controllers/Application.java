@@ -2547,6 +2547,7 @@ public class Application extends Controller {
         JsonObject suggestedParam = new JsonObject();
 
         suggestedParam.addProperty("parameterId",suggestedValue.tuningParameter.id);
+        suggestedParam.addProperty("parameterValue",suggestedValue.paramValue);
         parameters.add(suggestedParam);
         }
         dataset.add("suggestedParameters",parameters );
