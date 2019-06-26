@@ -26,14 +26,15 @@ $(document).ajaxStop(function() {
 /* Plot the performance graph for the data */
 function plotter(data , jobDefList) {
 
-
- // var data = [{"resourceused":1.11719970703125,"inputSizeInBytes":0.0,"executionTime":1.9007,"createdTs":"2019.03.01.00.59.41"},{"resourceused":0.7342702907986111,"inputSizeInBytes":1.0,"executionTime":1.0365333333333333,"createdTs":"2019.03.01.1.59.41"},{"resourceused":0.8350870768229167,"inputSizeInBytes":0.0,"executionTime":0.8527666666666667,"createdTs":"2019.03.01.3.59.41"},{"resourceused":0.79483642578125,"inputSizeInBytes":1.0,"executionTime":1.0374,"createdTs":"2019.03.01.4.59.41"},{"resourceused":0.13834526909722222,"inputSizeInBytes":1.0,"executionTime":0.65605,"createdTs":"2019.03.01.8.59.41"},{"resourceused":0.7342702907986111,"inputSizeInBytes":1.0,"executionTime":1.0365333333333333,"createdTs":"2019.03.01.1.59.41"}];
-
   var lastEle = data[data.length-1];
 
   data.pop();
 
   var lastEle2 = data[data.length-1];
+
+  data.pop();
+
+  var lastEle3 = data[data.length-1];
 
   data.pop();
 
@@ -118,14 +119,15 @@ function plotter(data , jobDefList) {
   graphContainer.append("svg:text")
       .style("font-size", "16px")
       .style("fill", "#006060")
-      .attr("transform", "translate(" + (MARGINS.left/10) + ", " + MARGINS.top/2 + ")")
+      .attr("transform", "translate(" + (MARGINS.left/10) + ", " + MARGINS.top + ")")
       .text("ResourcesUsed");
 
 
   graphContainer.append("svg:text")
+      .attr("id","ExecText")
       .style("font-size", "16px")
       .style("fill", "#006060")
-      .attr("transform", "translate(" + (GRAPH_WIDTH - 2*MARGINS.left/10) + ", " + MARGINS.top + ")")
+      .attr("transform", "translate(" + (GRAPH_WIDTH - MARGINS.left/10) + ", " + MARGINS.top + ")")
       .text("Execution Time");
 
 
@@ -159,14 +161,26 @@ function plotter(data , jobDefList) {
 
   graphContainer.append("rect")
       .attr("x", GRAPH_WIDTH - 18)
-      .attr("y", 40)
+      .attr("y", HEIGHT - 13)
       .attr("width", 14)
       .attr("height", 14)
-      .style("fill", 'green' );
+      .style("fill", 'green' )
+      .on("click", function(){
+        // Determine if current line is visible
+        var active   = ExecTime.active ? false : true,
+            newOpacity = active ? 0 : 1;
+        // Hide or show the elements
+        d3.select("#ExecTime").style("opacity", newOpacity);
+        d3.select("#ExecDots").style("opacity", newOpacity);
+        d3.select("#ExecTimeAxis").style("opacity", newOpacity);
+        d3.select("#ExecText").style("opacity", newOpacity);
+        // Update whether or not the elements are active
+        ExecTime.active = active;
+      });
 
   graphContainer.append("text")
       .attr("x", GRAPH_WIDTH - 30)
-      .attr("y", 49)
+      .attr("y", HEIGHT - 5)
       .attr("dy", ".30em")
       .style("text-anchor", "end")
       .on("click", function(){
@@ -175,8 +189,9 @@ function plotter(data , jobDefList) {
             newOpacity = active ? 0 : 1;
         // Hide or show the elements
         d3.select("#ExecTime").style("opacity", newOpacity);
-        // d3.select("#ExecTimeDots").style("opacity", newOpacity);
+        d3.select("#ExecDots").style("opacity", newOpacity);
         d3.select("#ExecTimeAxis").style("opacity", newOpacity);
+        d3.select("#ExecText").style("opacity", newOpacity);
         // Update whether or not the elements are active
         ExecTime.active = active;
       })
@@ -225,14 +240,15 @@ function plotter(data , jobDefList) {
       .attr("r", 5);
 
 
-  // graphContainer.append("svg:g")
-  //     .selectAll("scatter-dots")
-  //     .data(data)
-  //     .enter().append("svg:circle")
-  //     .style({stroke: 'white', fill: 'green'})
-  //     .attr("cx", function (d) { return xScale(d.createdTs); } )
-  //     .attr("cy", function (d) { return yScaleRight(d.executionTime); } )
-  //     .attr("r", 5);
+  graphContainer.append("svg:g")
+      .attr("id","ExecDots")
+      .selectAll("scatter-dots")
+      .data(data)
+      .enter().append("svg:circle")
+      .style({stroke: 'white', fill: 'green'})
+      .attr("cx", function (d) { return xScale(d.createdTs); } )
+      .attr("cy", function (d) { return yScaleRight(d.executionTime); } )
+      .attr("r", 5);
 
 
 //plot linear graphs
@@ -272,14 +288,14 @@ function plotter(data , jobDefList) {
       .attr('x', xScale(parseDate(lastEle.createdTs)))
       .attr('y', MARGINS.top - 10)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "15px")
       .text("Autotuning enabled");
 
   graphContainer.append("text")
       .attr('x', xScale(parseDate(lastEle2.createdTs)))
-      .attr('y', MARGINS.top )
+      .attr('y', MARGINS.top + 3 )
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "15px")
       .text("Best Parameter Set");
 
 
@@ -289,10 +305,21 @@ function plotter(data , jobDefList) {
       //  .data(lastEle)
       .attr('stroke-width', 1)
       .attr('x1', xScale(parseDate(lastEle2.createdTs)))
-      .attr('y1', MARGINS.top+5)
+      .attr('y1', MARGINS.top+7)
       .attr('x2', xScale(parseDate(lastEle2.createdTs)))
       .attr('y2', MARGINS.top + GRAPH_HEIGHT);
 
+  graphContainer.append("text")
+      .attr('x',2*MARGINS.left )
+      .attr('y', HEIGHT-5)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .text(function(d){
+        if(lastEle3.Autotuning== true)
+          return "";
+        else
+          return "Autotuning Disabled";
+      });
 
 
 }
