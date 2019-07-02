@@ -115,6 +115,18 @@ a.list-group-item-danger.active:focus {
   display:none;   /* Hide the y axis */
 }
 
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 40px;
+  height: 20px;
+  padding: 5px;
+  font: 12px;
+  border: 1.5px solid black;
+  background: white;
+  border-radius: 5px;
+  pointer-events: none;
+}
 /* Override bootstrap. Horizontal scrollable history table */
 body {
   font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Arial Narrow, Helvetica, sans-serif;

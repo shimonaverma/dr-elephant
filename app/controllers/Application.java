@@ -2524,7 +2524,6 @@ public class Application extends Controller {
 
     JobSuggestedParamSet result2 = getTimeStamp( jobDefId);
     JobSuggestedParamSet bestParameterId = getBestParameterId( jobDefId);
-    TuningJobExecutionParamSet bestParamTime = getBestParamTime(bestParameterId.id);    //merge these two functions
 
     JsonObject tuningEnabled = new JsonObject();
     int flag=0;
@@ -2543,13 +2542,32 @@ public class Application extends Controller {
 
       JsonArray parameters = new JsonArray();
 
-      for(JobSuggestedParamValue suggestedValue : SuggestedParamValue){
-        JsonObject suggestedParam = new JsonObject();
 
-        suggestedParam.addProperty("parameterId",suggestedValue.tuningParameter.id);
-        suggestedParam.addProperty("parameterValue",suggestedValue.paramValue);
+      Integer[] paramId = {19,20,25,27,28,29,30,31};
+
+      Map<Integer, Double> searchId = new HashMap<Integer, Double>();
+      searchId.put(19,Double.valueOf(0));
+      searchId.put(20,Double.valueOf(0));
+      searchId.put(25,Double.valueOf(0));
+      searchId.put(27,Double.valueOf(0));
+      searchId.put(28,Double.valueOf(0));
+      searchId.put(29,Double.valueOf(0));
+      searchId.put(30,Double.valueOf(0));
+      searchId.put(31,Double.valueOf(0));
+
+      for(JobSuggestedParamValue suggestedValue : SuggestedParamValue) {
+        searchId.put(suggestedValue.tuningParameter.id,suggestedValue.paramValue);
+
+      }
+
+
+      for(Integer i : paramId){
+        JsonObject suggestedParam = new JsonObject();
+        suggestedParam.addProperty("parameterId",i);
+        suggestedParam.addProperty("parameterValue",searchId.get(i));
         parameters.add(suggestedParam);
-        }
+      }
+
         dataset.add("suggestedParameters",parameters );
         datasets.add(dataset);
 
@@ -2577,12 +2595,20 @@ public class Application extends Controller {
     autoTune.addProperty("Autotuning",tuningJobDefinition.tuningEnabled );
     datasets.add(autoTune);
 
-    //add timestamp when best parameter was set
-    JsonObject bestParam =  new JsonObject();
-    bestParam.addProperty("BestParamId", bestParameterId.id);
-    String timeStamp2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(bestParamTime.createdTs);
-    bestParam.addProperty("createdTs",timeStamp2 );
-    datasets.add(bestParam);
+    if(bestParameterId != null) {
+      TuningJobExecutionParamSet bestParamTime = getBestParamTime(bestParameterId.id);    //merge these two functions
+      //add timestamp when best parameter was set
+      JsonObject bestParam = new JsonObject();
+      bestParam.addProperty("BestParamId", bestParameterId.id);
+      String timeStamp2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(bestParamTime.createdTs);
+      bestParam.addProperty("createdTs", timeStamp2);
+      datasets.add(bestParam);
+    }
+    else{
+      JsonObject bestParam = new JsonObject();
+      bestParam.addProperty("BestParamId", "");
+      datasets.add(bestParam);
+    }
 
     //add TS when Autotuning was enabled
     if(flag==1){
@@ -2663,6 +2689,7 @@ public class Application extends Controller {
         .where()
         .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id, jobDefId)
         .eq(JobSuggestedParamSet.TABLE.isParamSetBest, true)
+        .eq(JobSuggestedParamSet.TABLE.isParamSetSuggested, true)
         .order()
         .asc(JobSuggestedParamSet.TABLE.createdTs)
         .setMaxRows(1)

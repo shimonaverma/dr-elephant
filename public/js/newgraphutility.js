@@ -220,18 +220,10 @@ function plotter(data , jobDefList) {
       .interpolate('linear');
 
 
-  //show bubbles at the plotted points
-  var tooltipWidth = 60;
-  var div =  d3.select("body").append("div")
-      .style("display", "inline")
-      .style("opacity", 0)
-      .attr("width", tooltipWidth + "px")
-      .style("font-size", "12px")
-      .attr("class","graphColor")
-      .style("text-align", "center")
-      .style("border-radius", "5px")
-      .style("padding", "5px")
-      .style("border", "1.5px solid black");
+
+  var div = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
 
 
   graphContainer.append("svg:g")
@@ -346,8 +338,69 @@ function plotter(data , jobDefList) {
         if(lastEle3.Autotuning== true)
           return "";
         else
-          return "Autotuning Disabled";
+          return "Autotuning Disabled after Best Param Set";
       });
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Plot for parameters //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  for (var i =0 ;i <=7 ;i++){
+
+    var yParam = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+40]).domain([0,
+      d3.max(data, function (d) { return Math.max(d.suggestedParameters[i].parameterValue) })]);
+
+
+    var yAxisParam = d3.svg.axis()
+        .scale(yParam)
+        .orient("left")
+        .ticks(5);
+
+    var width = 900;
+    var height = 350;
+
+    //Create SVG element
+    var paramcontainer1 = d3.select("#parameter")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+
+// var paramcontainer1= d3.select("#parameters");
+
+    paramcontainer1.append("svg:g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(" + (MARGINS.left) + ", 0)")
+        .call(yAxisParam)
+        .attr("id", "ExecTimeAxis")
+        .selectAll("text")
+        .attr("fill", "rgb(0, 119, 181)");
+
+
+    paramcontainer1.append("svg:g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0 ," + (HEIGHT - MARGINS.bottom) + ")")
+        .call(xAxis)
+        .selectAll("text")
+        .style("text-anchor","end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform","rotate(-25)");
+
+    var lineGenParam = d3.svg.line()
+        .x(function(d){ return xScale(d.createdTs); })
+        .y(function(d) {if(Object.keys(d.suggestedParameters).length<= i){return 0;}
+        else
+        { return yParam(d.suggestedParameters[i].parameterValue);}
+        });
+
+
+    paramcontainer1.append('svg:path')
+        .attr('d', lineGenParam(data))
+        .attr('stroke', 'blue')
+        .attr('stroke-width', 1)
+        .attr('fill', 'none');
+  }
 
 
 }
