@@ -23,6 +23,12 @@ $(document).ajaxStop(function() {
   $("#loading-indicator").hide();
 });
 
+
+
+/////////////////////////function to make table of retrieved data ////////////////////////////
+
+
+
 /* Plot the performance graph for the data */
 function plotter(data , jobDefList) {
 
@@ -46,6 +52,57 @@ function plotter(data , jobDefList) {
       GRAPH_HEIGHT = HEIGHT - MARGINS.top - MARGINS.bottom;
   var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  var table1 = d3.select('#table').append('table');
+
+  var thead = table1.append('thead');
+  var tbody = table1.append('tbody');
+
+  var columns = ['createdTs','resourceused', 'inputSizeInBytes', 'executionTime'], column_id = 'code', column_class = 'norm';
+
+  thead.append('tr')
+      .selectAll('th')
+      .data(['Job Executions','Resources Used (in GB)', 'Input Size (in GB)', 'Execution Time (sec)'])
+      .enter()
+      .append('th')
+      .text(function(column) {
+        return column;
+      });
+
+  var rows = tbody.selectAll('tr')
+      .data(data)
+      .enter()
+      .append('tr');
+
+
+
+  var cells = rows.selectAll('td')
+      .data(function(row) {
+        return columns.map(function(column) {
+          return {
+            column: column,
+            value: row[column],
+            id: row[column_id],
+            class: row[column_class]
+          };
+        });
+      })
+      .enter()
+      .append('td')
+      .html(function(d) {
+        return d.value;
+      });
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
   data.forEach(function(d) {
     d.createdTs = parseDate(d.createdTs);});
 
@@ -53,11 +110,18 @@ function plotter(data , jobDefList) {
           .range([2*MARGINS.left, GRAPH_WIDTH-MARGINS.right])
           .domain(d3.extent(data, function(d) { return d.createdTs; })),
 
-      yScale = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+30])
-          .domain([0, Math.max(d3.max(data, function (d) { return Math.max(d.inputSizeInBytes) }),d3.max(data, function (d) { return Math.max(d.resourceused) }))]);
-
-  var yScaleRight = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+30 ]).domain([d3.min(data, function (d) { return Math.min(d.executionTime) }),
-    d3.max(data, function (d) { return Math.max(d.executionTime) })]);
+      yScale = d3.scale.linear()
+          .range([MARGINS.top + GRAPH_HEIGHT+20, MARGINS.top+40])
+          .domain([0,Math.max(
+              d3.max(data, function (d) { return Math.max(d.inputSizeInBytes) }),
+              d3.max(data, function (d) { return Math.max(d.resourceused) }),
+              d3.max(data, function (d) { return Math.max(d.resourceused/d.inputSizeInBytes)
+              }))]);
+  var yScaleRight = d3.scale.linear()
+      .range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+30 ])
+      .domain([
+          d3.min(data, function (d) { return Math.min(d.executionTime) }),
+          d3.max(data, function (d) { return Math.max(d.executionTime) })]);
 
   var customTimeFormat = d3.time.format("%b-%d %I:%M:%S");
 
@@ -85,7 +149,7 @@ function plotter(data , jobDefList) {
   var yAxisRight = d3.svg.axis()
       .scale(yScaleRight)
       .orient("right")
-      .ticks(5);
+      .ticks(6);
 
 
   graphContainer.append("svg:g")
@@ -127,7 +191,7 @@ function plotter(data , jobDefList) {
       .attr("id","ExecText")
       .style("font-size", "16px")
       .style("fill", "#006060")
-      .attr("transform", "translate(" + (GRAPH_WIDTH - MARGINS.left/10) + ", " + MARGINS.top + ")")
+      .attr("transform", "translate(" + (GRAPH_WIDTH - MARGINS.left) + ", " + MARGINS.top + ")")
       .text("Execution Time");
 
 
@@ -330,18 +394,18 @@ function plotter(data , jobDefList) {
       .attr('y2', MARGINS.top + GRAPH_HEIGHT);
 
   graphContainer.append("text")
-      .attr('x',2*MARGINS.left )
+      .attr('x',3*MARGINS.left )
       .attr('y', HEIGHT-5)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "14px")
       .text(function(d){
         if(lastEle3.Autotuning== true)
           return "";
         else
-          return "Autotuning Disabled after Best Param Set";
+          return "Autotuning Disabled";
       });
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Plot for parameters //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -356,8 +420,8 @@ function plotter(data , jobDefList) {
         .orient("left")
         .ticks(5);
 
-    var width = 900;
-    var height = 350;
+    var width = GRAPH_WIDTH;
+    var height = HEIGHT;
 
     //Create SVG element
     var paramcontainer1 = d3.select("#parameter")
@@ -370,7 +434,7 @@ function plotter(data , jobDefList) {
 
     paramcontainer1.append("svg:g")
         .attr("class", "y axis")
-        .attr("transform", "translate(" + (MARGINS.left) + ", 0)")
+        .attr("transform", "translate(" + (2*MARGINS.left) + ", 0)")
         .call(yAxisParam)
         .attr("id", "ExecTimeAxis")
         .selectAll("text")
@@ -400,10 +464,24 @@ function plotter(data , jobDefList) {
         .attr('stroke', 'blue')
         .attr('stroke-width', 1)
         .attr('fill', 'none');
+
+
+
+    var id = data[0].suggestedParameters[i].parameterId;
+
+    paramcontainer1.append("text")
+        .attr("x", GRAPH_WIDTH - 26)
+        .attr('y', 50)
+        .attr("text-anchor", "end")
+        .style("font-size", "15px")
+        .text("Parameter id :"+ id);
   }
 
 
 }
+
+
+
 
 /* Return the query parameters */
 function queryString() {

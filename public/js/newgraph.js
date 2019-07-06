@@ -20,6 +20,7 @@ $(document).ready(function(){
   $.getJSON('/rest/newgraphdata?id=' + queryString()['job-def-id'], function(data) {
     //updateExecTimezone(data);
     plotter(data, []);
+
   });
 
   //loadTableTooltips();

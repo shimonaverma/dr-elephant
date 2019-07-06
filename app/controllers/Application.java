@@ -806,6 +806,10 @@ public class Application extends Controller {
         return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
             jobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
       }
+      else if (graphType.equals("newGraph")) {
+        return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
+            jobAnalysisPage.render(jobDefPair, graphType)));
+      }
     } else {
       if (graphType.equals("heuristics")) {
         return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
@@ -2529,9 +2533,9 @@ public class Application extends Controller {
     int flag=0;
     for (JobExecution result : results) {
         JsonObject dataset = new JsonObject();
-        dataset.addProperty("resourceused", result.resourceUsage);
-        dataset.addProperty("inputSizeInBytes", Math.round(((result.inputSizeInBytes/(1024*1024*1024))*100.00)/100.00));
-        dataset.addProperty("executionTime", result.executionTime);
+        dataset.addProperty("resourceused", Math.round(result.resourceUsage*100.000)/100.000);
+        dataset.addProperty("inputSizeInBytes", Math.round((result.inputSizeInBytes/(1024*1024*1024))*100.00)/100.00);
+        dataset.addProperty("executionTime",Math.round(result.executionTime*100.000)/100.000 );
         dataset.addProperty("jobExecutionId", result.id);
 
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result.createdTs);
@@ -2556,7 +2560,7 @@ public class Application extends Controller {
       searchId.put(31,Double.valueOf(0));
 
       for(JobSuggestedParamValue suggestedValue : SuggestedParamValue) {
-        searchId.put(suggestedValue.tuningParameter.id,suggestedValue.paramValue);
+        searchId.put(suggestedValue.tuningParameter.id,Math.round(suggestedValue.paramValue*100.00)/100.00);
 
       }
 
@@ -2606,7 +2610,8 @@ public class Application extends Controller {
     }
     else{
       JsonObject bestParam = new JsonObject();
-      bestParam.addProperty("BestParamId", "");
+      bestParam.addProperty("NoBestParamId", "0");
+      bestParam.addProperty("createdTs", "");
       datasets.add(bestParam);
     }
 
@@ -2614,6 +2619,11 @@ public class Application extends Controller {
     if(flag==1){
         datasets.add(tuningEnabled);
       }
+    else{
+      JsonObject autotuning = new JsonObject();
+      autotuning.addProperty("TuningDisabled", "0");
+      datasets.add(autotuning);
+    }
 
     return ok(new Gson().toJson(datasets));
 
