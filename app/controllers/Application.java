@@ -54,6 +54,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.TreeSet;
 
 import models.AppHeuristicResult;
@@ -798,6 +799,8 @@ public class Application extends Controller {
     if (maxStages > STAGE_LIMIT) {
       maxStages = STAGE_LIMIT;
     }
+
+
     if (version.equals(Version.NEW)) {
       if (graphType.equals("heuristics")) {
         return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
@@ -806,7 +809,7 @@ public class Application extends Controller {
         return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
             jobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
       }
-      else if (graphType.equals("newGraph")) {
+      else if (graphType.equals("auto-tuning")) {
         return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
             jobAnalysisPage.render(jobDefPair, graphType)));
       }
@@ -2510,7 +2513,7 @@ public class Application extends Controller {
     return tuningParameter;
   }
 
-  public static Result restNewGraphData(String jobId) {
+  public static Result restNewGraphData(String jobId , String startDate ,String endDate) {
     JsonArray datasets = new JsonArray();
     if (jobId == null || jobId.isEmpty()) {
       return ok(new Gson().toJson(datasets));
@@ -2518,10 +2521,14 @@ public class Application extends Controller {
     JobDefinition jobDef = getJobDefIdFromJobId(jobId);
     Integer jobDefId = jobDef.id;
 
-    // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
-    //direct database query for appllications with given flowdefId
-    List<JobExecution> results = getNewGraphData(jobDefId);
-
+    logger.info("start :" + startDate + ", end " +endDate);
+    List<JobExecution> results = new ArrayList<JobExecution>();
+    if(startDate.equals("Begin") || endDate.equals("End")) {
+      results = getNewGraphData(jobDefId);
+    }
+    else{
+     results = getNewGraphDataWithDates(jobDefId , startDate , endDate);
+    }
     if (results.size() == 0) {
       logger.info("No results for Job url");
     }
@@ -2543,11 +2550,9 @@ public class Application extends Controller {
 
       List<JobSuggestedParamValue> SuggestedParamValue = getJobParameters(result.id);
 
-
       JsonArray parameters = new JsonArray();
-
-
       Integer[] paramId = {19,20,25,27,28,29,30,31};
+      String[] paramName = {"mapreduce.map.memory.mb","mapreduce.map.java.opts","mapreduce.task.io.sort.mb","mapreduce.map.sort.spill.percent","mapreduce.reduce.memory.mb","pig.maxCombinedSplitSize","mapreduce.reduce.java.opts","mapreduce.input.fileinputformat.split.maxsize"};
 
       Map<Integer, Double> searchId = new HashMap<Integer, Double>();
       searchId.put(19,Double.valueOf(0));
@@ -2561,14 +2566,14 @@ public class Application extends Controller {
 
       for(JobSuggestedParamValue suggestedValue : SuggestedParamValue) {
         searchId.put(suggestedValue.tuningParameter.id,Math.round(suggestedValue.paramValue*100.00)/100.00);
-
       }
 
-
+      int j=0;
       for(Integer i : paramId){
         JsonObject suggestedParam = new JsonObject();
         suggestedParam.addProperty("parameterId",i);
         suggestedParam.addProperty("parameterValue",searchId.get(i));
+        suggestedParam.addProperty("parameterName",paramName[j++]);
         parameters.add(suggestedParam);
       }
 
@@ -2602,11 +2607,19 @@ public class Application extends Controller {
     if(bestParameterId != null) {
       TuningJobExecutionParamSet bestParamTime = getBestParamTime(bestParameterId.id);    //merge these two functions
       //add timestamp when best parameter was set
-      JsonObject bestParam = new JsonObject();
-      bestParam.addProperty("BestParamId", bestParameterId.id);
-      String timeStamp2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(bestParamTime.createdTs);
-      bestParam.addProperty("createdTs", timeStamp2);
-      datasets.add(bestParam);
+      if(bestParamTime.createdTs.before(results.get(0).createdTs) || bestParamTime.createdTs.after(results.get(results.size()-1).createdTs)){
+        JsonObject bestParam = new JsonObject();
+        bestParam.addProperty("NoBestParamId", "0");
+        bestParam.addProperty("createdTs", "");
+        datasets.add(bestParam);
+      }
+      else {
+        String timeStamp2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(bestParamTime.createdTs);
+        JsonObject bestParam = new JsonObject();
+        bestParam.addProperty("BestParamId", bestParameterId.id);
+        bestParam.addProperty("createdTs", timeStamp2);
+        datasets.add(bestParam);
+      }
     }
     else{
       JsonObject bestParam = new JsonObject();
@@ -2615,7 +2628,7 @@ public class Application extends Controller {
       datasets.add(bestParam);
     }
 
-    //add TS when Autotuning was enabled
+    //add timestamp when Autotuning was enabled
     if(flag==1){
         datasets.add(tuningEnabled);
       }
@@ -2668,16 +2681,31 @@ public class Application extends Controller {
   }
 
   private static List<JobExecution> getNewGraphData(Integer jobDefId) {
-    // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
     List<JobExecution> results = JobExecution.find.select("*")
         .where()
         .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , jobDefId )
         .eq(JobExecution.TABLE.executionState , "SUCCEEDED" )
         .order()
-        .asc(JobExecution.TABLE.createdTs)
+        .desc(JobExecution.TABLE.createdTs)
+        .setMaxRows(30)
         .findList();
 
-    return results;
+    return Lists.reverse(results);
+  }
+
+
+  private static List<JobExecution> getNewGraphDataWithDates(Integer jobDefId , String startDate , String endDate) {
+    // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
+    List<JobExecution> results = JobExecution.find.select("*")
+        .where()
+        . between("date(" + JobExecution.TABLE.createdTs + ")", startDate,endDate )
+        .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , jobDefId )
+        .eq(JobExecution.TABLE.executionState , "SUCCEEDED" )
+        .order()
+        .desc(JobExecution.TABLE.createdTs)
+        .findList();
+
+    return Lists.reverse(results);
   }
 
   private static JobSuggestedParamSet getTimeStamp(Integer jobDefId) {
@@ -2707,4 +2735,32 @@ public class Application extends Controller {
 
     return jobSuggestedParamSet;
   }
+
+  public static Result restgetDateRange(String jobId){
+      //get list of all dates when a particular job is executed
+      JobDefinition jobDefinitionId = getJobDefIdFromJobId(jobId);
+
+      List<JobExecution> datesOfExecution = JobExecution.find
+          .select( "date("+JobExecution.TABLE.createdTs+")" )
+          .where()
+          .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , jobDefinitionId.id )
+          .eq(JobExecution.TABLE.executionState , "SUCCEEDED" )
+          .findList();
+
+    HashSet<String> distinctDates = new HashSet<String>();
+
+      JsonArray dates  =new JsonArray();
+    for(JobExecution date : datesOfExecution){
+      String timeStamp = new SimpleDateFormat("yyyy-MM-dd").format(date.createdTs);
+        if(!distinctDates.contains(timeStamp)) {
+          distinctDates.add(timeStamp);
+          JsonObject result = new JsonObject();
+          result.addProperty("date", timeStamp);
+          dates.add(result);
+        }
+      }
+
+    return ok(new Gson().toJson(dates));
+  }
+
 }

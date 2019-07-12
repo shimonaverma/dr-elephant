@@ -15,14 +15,13 @@
  */
 
 $(document).ready(function(){
+    var startDate = queryString()['startDate'];
+    var endDate = queryString()['endDate'];
 
-  /* Plot graph for data obtained from ajax call */
-  $.getJSON('/rest/newgraphdata?id=' + queryString()['job-def-id'], function(data) {
-    //updateExecTimezone(data);
-    plotter(data, []);
-
-  });
-
-  //loadTableTooltips();
+  startDate= startDate || 'Begin' ;
+  endDate= endDate || 'End' ;
+    $.getJSON('/rest/newgraphdata?id=' + queryString()['job-def-id'] +'&startDate='+ startDate+'&endDate='+endDate , function(data) {
+      plotter(data);
+    });
 });
 

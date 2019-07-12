@@ -50,12 +50,6 @@
               } else {
                 <option value="heuristics">Heuristics</option>
               }
-              @if(graphType == "newGraph") {
-                <option value="newGraph" selected>newGraph</option>
-              } else {
-                <option value="newGraph">newGraph</option>
-              }
-
             </select></td>
           <td>
             <button type="submit" class="btn wf-button">Search</button>
@@ -64,5 +58,31 @@
       </table>
     </form>
   </div>
+
+
+  @if(graphType == "auto-tuning") {
+      <form id="date-form" role="form" method="get" >
+        <div class="form-group">
+          <input type="hidden" class="form-control" id="form-dates" name="job-def-id" value="@jobDefId" >
+          <input type="hidden" class="form-control" id="form-dates" name="select-graph-type" value="@graphType" >
+        </div>
+        <table class="info borderless">
+          <tr>
+            <td>
+              <label for="startDate">Start Date</label>
+              <select class="form-control" name="startDate" id="startDate" >
+              </select></td>
+            <td>
+            <label for="endDate">End Date</label>
+              <select class="form-control" name="endDate" id="endDate" >
+              </select></td>
+            <td>
+              <button type="submit" class="btn wf-button">Set Range</button>
+            </td>
+          </tr>
+        </table>
+      </form>
+  }
   @results
 }
+
