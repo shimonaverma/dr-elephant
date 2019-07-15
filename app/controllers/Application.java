@@ -57,6 +57,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
 
+import javafx.util.Pair;
 import models.AppHeuristicResult;
 import models.AppResult;
 import models.JobDefinition;
@@ -1824,16 +1825,6 @@ public class Application extends Controller {
       String currentTuningAlgorithm = getCurrentTuningAlgorithmName(tuningAlgorithm);
       JsonArray tuningAlgorithmList = new JsonArray();
 
-//      JsonArray ignoredHeuristics = new JsonArray();
-////      JsonObject igHeu = new JsonObject();
-//      JsonObject mapperSkew = new JsonObject();
-//      mapperSkew.addProperty("name", "Mapper Skew");
-//      ignoredHeuristics.add(mapperSkew);
-////      igHeu.add("Mapper Skew");
-////      igHeu.add("Reducer GC");
-////      igHeu.add("Reducer Skew");
-//      tuneIn.add("ignoredHeuristics",ignoredHeuristics);
-
       tuneIn.addProperty(ID, jobId);
       tuneIn.addProperty(JOB_DEFINTITION_ID, jobDefinitionId);
       //Two tuning types {HBT, OBT}
@@ -2513,7 +2504,40 @@ public class Application extends Controller {
     return tuningParameter;
   }
 
-  public static Result restNewGraphData(String jobId , String startDate ,String endDate) {
+  /*
+  * Rest api implementation for autotuning dashboard
+  * @results:
+  * [
+  *   {
+  *     resourceusage: ...
+  *     inputSize: ...
+  *     createdTs: ...
+  *     executionTime: ...
+  *     autoTuningEnabled: ...
+  *     jobExecutionId: ...
+  *     resourceused: ...
+  *     suggestedParameters: [
+  *           {parameterId: ..., parameterValue: ..., parameterName: ...}
+  *           {...}
+  *            ...
+  *           ]
+  *   }
+  * ..
+  * ..
+  *   {
+  *     Autotuning: ...
+  *   }
+  *   {
+  *     BestParamId: ...,
+  *     createdTs: ...
+  *   }
+  *   {
+  *     createdTs: ... ,
+  *     autoTuningEnabled:...
+  *   }
+  * ]
+  */
+  public static Result restAutotuningData(String jobId , String startDate ,String endDate) {
     JsonArray datasets = new JsonArray();
     if (jobId == null || jobId.isEmpty()) {
       return ok(new Gson().toJson(datasets));
@@ -2521,13 +2545,12 @@ public class Application extends Controller {
     JobDefinition jobDef = getJobDefIdFromJobId(jobId);
     Integer jobDefId = jobDef.id;
 
-    logger.info("start :" + startDate + ", end " +endDate);
     List<JobExecution> results = new ArrayList<JobExecution>();
     if(startDate.equals("Begin") || endDate.equals("End")) {
-      results = getNewGraphData(jobDefId);
+      results = getAutotuningGraphData(jobDefId);
     }
     else{
-     results = getNewGraphDataWithDates(jobDefId , startDate , endDate);
+     results = getAutotuningGraphDataWithDates(jobDefId , startDate , endDate);
     }
     if (results.size() == 0) {
       logger.info("No results for Job url");
@@ -2536,50 +2559,39 @@ public class Application extends Controller {
     JobSuggestedParamSet result2 = getTimeStamp( jobDefId);
     JobSuggestedParamSet bestParameterId = getBestParameterId( jobDefId);
 
+    //get details of all tuning paramerters
+    Set<Integer> paramId = new HashSet<Integer>();
+    Map<Integer, Pair<String , Double>> searchId = new HashMap<Integer, Pair<String , Double>>();
+
     JsonObject tuningEnabled = new JsonObject();
     int flag=0;
     for (JobExecution result : results) {
-        JsonObject dataset = new JsonObject();
-        dataset.addProperty("resourceused", Math.round(result.resourceUsage*100.000)/100.000);
-        dataset.addProperty("inputSizeInBytes", Math.round((result.inputSizeInBytes/(1024*1024*1024))*100.00)/100.00);
-        dataset.addProperty("executionTime",Math.round(result.executionTime*100.000)/100.000 );
-        dataset.addProperty("jobExecutionId", result.id);
+      JsonObject dataset = new JsonObject();
+      dataset.addProperty("resourceused", Math.round(result.resourceUsage*100.000)/100.000);
+      dataset.addProperty("inputSize", Math.round((result.inputSizeInBytes/(1024*1024*1024))*100.00)/100.00);
+      dataset.addProperty("executionTime",Math.round(result.executionTime*100.000)/100.000 );
+      dataset.addProperty("jobExecutionId", result.id);
 
-        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result.createdTs);
-        dataset.addProperty("createdTs", timeStamp);
+      String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(result.createdTs);
+      dataset.addProperty("createdTs", timeStamp);
 
       List<JobSuggestedParamValue> SuggestedParamValue = getJobParameters(result.id);
 
       JsonArray parameters = new JsonArray();
-      Integer[] paramId = {19,20,25,27,28,29,30,31};
-      String[] paramName = {"mapreduce.map.memory.mb","mapreduce.map.java.opts","mapreduce.task.io.sort.mb","mapreduce.map.sort.spill.percent","mapreduce.reduce.memory.mb","pig.maxCombinedSplitSize","mapreduce.reduce.java.opts","mapreduce.input.fileinputformat.split.maxsize"};
-
-      Map<Integer, Double> searchId = new HashMap<Integer, Double>();
-      searchId.put(19,Double.valueOf(0));
-      searchId.put(20,Double.valueOf(0));
-      searchId.put(25,Double.valueOf(0));
-      searchId.put(27,Double.valueOf(0));
-      searchId.put(28,Double.valueOf(0));
-      searchId.put(29,Double.valueOf(0));
-      searchId.put(30,Double.valueOf(0));
-      searchId.put(31,Double.valueOf(0));
 
       for(JobSuggestedParamValue suggestedValue : SuggestedParamValue) {
-        searchId.put(suggestedValue.tuningParameter.id,Math.round(suggestedValue.paramValue*100.00)/100.00);
-      }
-
-      int j=0;
-      for(Integer i : paramId){
+        paramId.add(suggestedValue.tuningParameter.id);
+        TuningParameter paramDetails = getTuningParameter(suggestedValue.tuningParameter.id);
+        searchId.put(paramDetails.id , new Pair<String , Double>(paramDetails.paramName, paramDetails.defaultValue));
         JsonObject suggestedParam = new JsonObject();
-        suggestedParam.addProperty("parameterId",i);
-        suggestedParam.addProperty("parameterValue",searchId.get(i));
-        suggestedParam.addProperty("parameterName",paramName[j++]);
+        suggestedParam.addProperty("parameterId",suggestedValue.tuningParameter.id);
+        suggestedParam.addProperty("parameterValue",Math.round(suggestedValue.paramValue*100.00)/100.00 );
+        suggestedParam.addProperty("parameterName",paramDetails.paramName);
         parameters.add(suggestedParam);
       }
 
         dataset.add("suggestedParameters",parameters );
         datasets.add(dataset);
-
         if(result.createdTs.after(result2.createdTs))
         {
           if(flag==0){
@@ -2590,6 +2602,26 @@ public class Application extends Controller {
         }
         dataset.addProperty("autoTuningEnabled", flag);
       }
+
+    for(int i =0 ; i < datasets.size() ; i++){
+        JsonArray suggestedValues = datasets.get(i).getAsJsonObject().get("suggestedParameters").getAsJsonArray();
+        for(Integer key : searchId.keySet()) {
+          int flag2 =0 ;
+          for(int j=0 ; j < suggestedValues.size() ; j++){
+            if ( suggestedValues.get(j).getAsJsonObject().get("parameterId").getAsInt() == key){
+              flag2=1;
+              break;
+            }
+          }
+          if(flag2 == 0){
+            JsonObject defaultParam = new JsonObject();
+            defaultParam.addProperty("parameterId",key);
+            defaultParam.addProperty("parameterValue",searchId.get(key).getValue());
+            defaultParam.addProperty("parameterName",searchId.get(key).getKey());
+            datasets.get(i).getAsJsonObject().get("suggestedParameters").getAsJsonArray().add(defaultParam);
+          }
+        }
+    }
 
     //add if autotuning was enabled or not
     TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find
@@ -2627,7 +2659,6 @@ public class Application extends Controller {
       bestParam.addProperty("createdTs", "");
       datasets.add(bestParam);
     }
-
     //add timestamp when Autotuning was enabled
     if(flag==1){
         datasets.add(tuningEnabled);
@@ -2637,9 +2668,7 @@ public class Application extends Controller {
       autotuning.addProperty("TuningDisabled", "0");
       datasets.add(autotuning);
     }
-
     return ok(new Gson().toJson(datasets));
-
   }
 
   private static  TuningJobExecutionParamSet getBestParamTime(Long paramId) {
@@ -2651,6 +2680,9 @@ public class Application extends Controller {
     return jobSuggestedParamSetId;
   }
 
+  /*
+  * Find tuned parameters
+  * */
   private static  List<JobSuggestedParamValue> getJobParameters(Long jobExecId){
     TuningJobExecutionParamSet jobSuggestedParamSetId = TuningJobExecutionParamSet.find
         .select("*")
@@ -2669,7 +2701,9 @@ public class Application extends Controller {
     return jobSuggestedParameters;
   }
 
-
+/*
+* get job definition id from url
+*/
   private static JobDefinition getJobDefIdFromJobId(String jobId) {
 
     JobDefinition jobDefinition = JobDefinition.find.select("*")
@@ -2680,7 +2714,10 @@ public class Application extends Controller {
     return jobDefinition;
   }
 
-  private static List<JobExecution> getNewGraphData(Integer jobDefId) {
+  /*
+  * Get data for given job definition id
+  */
+  private static List<JobExecution> getAutotuningGraphData(Integer jobDefId) {
     List<JobExecution> results = JobExecution.find.select("*")
         .where()
         .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , jobDefId )
@@ -2693,8 +2730,10 @@ public class Application extends Controller {
     return Lists.reverse(results);
   }
 
-
-  private static List<JobExecution> getNewGraphDataWithDates(Integer jobDefId , String startDate , String endDate) {
+/*
+ get executions for given date range
+ */
+  private static List<JobExecution> getAutotuningGraphDataWithDates(Integer jobDefId , String startDate , String endDate) {
     // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
     List<JobExecution> results = JobExecution.find.select("*")
         .where()
@@ -2702,12 +2741,14 @@ public class Application extends Controller {
         .eq(JobExecution.TABLE.job + "." + JobDefinition.TABLE.id , jobDefId )
         .eq(JobExecution.TABLE.executionState , "SUCCEEDED" )
         .order()
-        .desc(JobExecution.TABLE.createdTs)
+        .asc(JobExecution.TABLE.createdTs)
         .findList();
 
-    return Lists.reverse(results);
+    return results;
   }
-
+/*
+* Find timestamp when autotuning was enabled
+*/
   private static JobSuggestedParamSet getTimeStamp(Integer jobDefId) {
     JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
         .where()
@@ -2722,6 +2763,9 @@ public class Application extends Controller {
     return jobSuggestedParamSet;
   }
 
+  /*
+  * Find Timestamp for best parameter values
+  */
   private static JobSuggestedParamSet getBestParameterId(Integer jobDefId) {
     JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
         .where()
@@ -2736,6 +2780,9 @@ public class Application extends Controller {
     return jobSuggestedParamSet;
   }
 
+  /*
+  Get date of first execution and last execution of a given job
+  */
   public static Result restgetDateRange(String jobId){
       //get list of all dates when a particular job is executed
       JobDefinition jobDefinitionId = getJobDefIdFromJobId(jobId);
@@ -2748,7 +2795,6 @@ public class Application extends Controller {
           .findList();
 
     HashSet<String> distinctDates = new HashSet<String>();
-
       JsonArray dates  =new JsonArray();
     for(JobExecution date : datesOfExecution){
       String timeStamp = new SimpleDateFormat("yyyy-MM-dd").format(date.createdTs);
@@ -2759,8 +2805,6 @@ public class Application extends Controller {
           dates.add(result);
         }
       }
-
     return ok(new Gson().toJson(dates));
   }
-
 }

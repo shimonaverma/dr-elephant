@@ -52,7 +52,7 @@ function plotter(data ) {
   var thead = table1.append('thead');
   var tbody = table1.append('tbody');
 
-  var columns = ['createdTs','resourceused', 'inputSizeInBytes', 'executionTime'], column_id = 'code', column_class = 'norm';
+  var columns = ['createdTs','resourceused', 'inputSize', 'executionTime'], column_id = 'code', column_class = 'norm';
 
   thead.append('tr')
       .selectAll('th')
@@ -90,8 +90,12 @@ function plotter(data ) {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
+  for( i=0 ;i < data.length ; i++){
+    data[i].suggestedParameters.sort(function(a,b){
+          return (a.parameterId > b.parameterId) ? 1 : -1;
+        }
+    );
+  };
 
   data.forEach(function(d) {
     d.createdTs = parseDate(d.createdTs);});
@@ -103,7 +107,7 @@ function plotter(data ) {
       yScale = d3.scale.linear()
           .range([MARGINS.bottom + GRAPH_HEIGHT-10, 2*MARGINS.top+20])
           .domain([0,Math.max(
-              d3.max(data, function (d) { return Math.max(d.inputSizeInBytes) }),
+              d3.max(data, function (d) { return Math.max(d.inputSize) }),
               d3.max(data, function (d) { return Math.max(d.resourceused) })
           )]);
   var yScaleRight = d3.scale.linear()
@@ -125,14 +129,7 @@ function plotter(data ) {
       yAxis = d3.svg.axis()
           .scale(yScale)
           .orient("left")
-          .ticks(5)
-// .tickFormat(function(d) {
-//             if((d/(1024*3600))>100.0) {
-//                 return d3.round(d/(1024*3600),0);        // convert to GB Hours with 0 decimal places for large numbers
-//             } else {
-//                 return d3.round(d/(1024*3600),2);       // convert to GB Hours with 2 decimal places for small numbers
-//             }
-//         })
+          .ticks(6)
   ;
 
   var yAxisRight = d3.svg.axis()
@@ -272,7 +269,7 @@ function plotter(data ) {
   var lineGenInputSize = d3.svg.line()
       .x(function(d){ return xScale(d.createdTs); })
       .y(function(d) {
-        return yScale(d.inputSizeInBytes);
+        return yScale(d.inputSize);
       })
       .interpolate('linear');
 
@@ -321,7 +318,7 @@ function plotter(data ) {
       .enter().append("svg:circle")
       .style({stroke: 'white', fill: '#FF0000'})
       .attr("cx", function (d) { return xScale(d.createdTs); } )
-      .attr("cy", function (d) { return yScale(d.inputSizeInBytes); } )
+      .attr("cy", function (d) { return yScale(d.inputSize); } )
       .attr("r", 5);
 
 
@@ -415,7 +412,6 @@ function plotter(data ) {
     var yParam = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+40]).domain([0,
       d3.max(data, function (d) { return Math.max(d.suggestedParameters[i].parameterValue) })]);
 
-
     var yAxisParam = d3.svg.axis()
         .scale(yParam)
         .orient("left")
@@ -430,9 +426,6 @@ function plotter(data ) {
         .attr("width", width)
         .attr("height", height);
 
-
-// var paramcontainer1= d3.select("#parameters");
-
     paramcontainer1.append("svg:g")
         .attr("class", "y axis")
         .attr("transform", "translate(" + (2*MARGINS.left) + ", 0)")
@@ -440,7 +433,6 @@ function plotter(data ) {
         .attr("id", "ExecTimeAxis")
         .selectAll("text")
         .attr("fill", "rgb(0, 119, 181)");
-
 
     paramcontainer1.append("svg:g")
         .attr("class", "x axis")
@@ -466,8 +458,6 @@ function plotter(data ) {
         .attr('stroke-width', 1)
         .attr('fill', 'none');
 
-
-
     var id = data[0].suggestedParameters[i].parameterName;
 
     paramcontainer1.append("text")
@@ -476,8 +466,23 @@ function plotter(data ) {
         .attr("text-anchor", "end")
         .style("font-size", "15px")
         .text("Parameter: "+ id);
-  }
 
+    var unit="";
+    if(id.includes(".mb") || id.includes(".java.opts")){
+      unit = "Value in MB";
+    }
+    else if(id.includes("Split") || id.includes("split")){
+      unit = "Value in Bytes";
+    }
+
+    paramcontainer1.append("text")
+        .attr("x", 2*MARGINS.left)
+        .attr('y', 70)
+        .attr("text-anchor", "end")
+        .style("font-size", "15px")
+        .style("fill", "#006060")
+        .text(unit);
+  }
 }
 
 

@@ -61,11 +61,12 @@
 
 
   @if(graphType == "auto-tuning") {
-      <form id="date-form" role="form" method="get" >
+      <form id="date-form" role="form" method="get">
         <div class="form-group">
           <input type="hidden" class="form-control" id="form-dates" name="job-def-id" value="@jobDefId" >
           <input type="hidden" class="form-control" id="form-dates" name="select-graph-type" value="@graphType" >
         </div>
+        <hr>
         <table class="info borderless">
           <tr>
             <td>
@@ -76,6 +77,7 @@
             <label for="endDate">End Date</label>
               <select class="form-control" name="endDate" id="endDate" >
               </select></td>
+
             <td>
               <button type="submit" class="btn wf-button">Set Range</button>
             </td>
