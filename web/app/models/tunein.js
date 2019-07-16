@@ -28,5 +28,4 @@ export default DS.Model.extend({
   iterationCount: DS.attr('number'),
   tuningParameters: DS.attr(),
   reasonForTuningDisable: DS.attr('string')
-  //ignoredHeuristics: DS.attr()
 });
