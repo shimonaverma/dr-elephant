@@ -407,7 +407,7 @@ function plotter(data ) {
 //Plot for parameters //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  for (var i =0 ;i <=7 ;i++){
+  for (var i =0 ;i <data[0].suggestedParameters.length ;i++){
 
     var yParam = d3.scale.linear().range([MARGINS.top + GRAPH_HEIGHT, MARGINS.top+40]).domain([0,
       d3.max(data, function (d) { return Math.max(d.suggestedParameters[i].parameterValue) })]);
